@@ -1,0 +1,16 @@
+[project]
+name = "so-hoa-vbcc"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Phùng Hùng", email = "hungfungvan@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "openai>=3.24.0",
+    "python-dotenv>=1.2.4",
+]
+
+[project.scripts]
+so-hoa-vbcc = "so_hoa_vbcc:main"
