@@ -1,0 +1,172 @@
+{
+    "Trần Phú": {
+        "ten_truong": "THPT Trần Phú",
+        "ten_don_vi": "THPT Trần Phú",
+        "ma_don_vi": "281"
+    },
+    "Dân lập Vĩnh Yên": {
+        "ten_truong": "Dân lập Vĩnh Yên",
+        "ten_don_vi": "THPT Liên Bảo",
+        "ma_don_vi": "408"
+    },
+    "Chuyên Vĩnh Phúc": {
+        "ten_truong": "THPT Chuyên Vĩnh Phúc",
+        "ten_don_vi": "THPT Chuyên Vĩnh Phúc",
+        "ma_don_vi": "003"
+    },
+    "Vĩnh Yên": {
+        "ten_truong": "THPT Vĩnh Yên",
+        "ten_don_vi": "THPT Vĩnh Yên",
+        "ma_don_vi": "288"
+    },
+    "PT cấp 2-3 DTNT tỉnh Vĩnh Phúc": {
+        "ten_truong": "PT cấp 2-3 DTNT tỉnh Vĩnh Phúc",
+        "ten_don_vi": "Phổ thông DTNT THCS và THPT Vĩnh Phúc",
+        "ma_don_vi": "114"
+    },
+    "Bán công Nguyễn Thái Học": {
+        "ten_truong": "Bán công Nguyễn Thái Học",
+        "ten_don_vi": "THPT Nguyễn Thái Học",
+        "ma_don_vi": "250"
+    },
+    "Ngô Gia Tự": {
+        "ten_truong": "THPT Ngô Gia Tự",
+        "ten_don_vi": "THPT Ngô Gia Tự",
+        "ma_don_vi": "247"
+    },
+    "Trần Nguyễn Hãn": {
+        "ten_truong": "THPT Trần Nguyên Hãn",
+        "ten_don_vi": "THPT Trần Nguyên Hãn",
+        "ma_don_vi": "280"
+    },
+    "Sáng Sơn": {
+        "ten_truong": "THPT Sáng Sơn",
+        "ten_don_vi": "THPT Sáng Sơn",
+        "ma_don_vi": "262"
+    },
+    "Liễn Sơn": {
+        "ten_truong": "THPT Liễn Sơn",
+        "ten_don_vi": "THPT Liễn Sơn",
+        "ma_don_vi": "235"
+    },
+    "Bán công Triệu Thái": {
+        "ten_truong": "Bán công Triệu Thái",
+        "ten_don_vi": "THPT Ngô Gia Tự",
+        "ma_don_vi": "247"
+    },
+    "Bán công Thái Hòa": {
+        "ten_truong": "Bán công Thái Hòa",
+        "ten_don_vi": "THPT Liễn Sơn",
+        "ma_don_vi": "235"
+    },
+    "Tam Dương": {
+        "ten_truong": "Tam Dương",
+        "ten_don_vi": "THPT Tam Dương",
+        "ma_don_vi": "266"
+    },
+    "Bán công Trần Hưng Đạo": {
+        "ten_truong": "Bán công Trần Hưng Đạo",
+        "ten_don_vi": "THPT Trần Hưng Đạo",
+        "ma_don_vi": "279"
+    },
+    "Lê Xoay": {
+        "ten_truong": "THPT Lê Xoay",
+        "ten_don_vi": "THPT Lê Xoay",
+        "ma_don_vi": "234"
+    },
+    "Nguyễn Viết Xuân": {
+        "ten_truong": "THPT Nguyễn Viết Xuân",
+        "ten_don_vi": "THPT Nguyễn Viết Xuân",
+        "ma_don_vi": "253"
+    },
+    "Đội Cấn": {
+        "ten_truong": "THPT Đội Cấn",
+        "ten_don_vi": "THPT Đội Cấn",
+        "ma_don_vi": "217"
+    },
+    "Bán công Vĩnh Tường": {
+        "ten_truong": "Bán công Vĩnh Tường",
+        "ten_don_vi": "THPT Nguyễn Thị Giang",
+        "ma_don_vi": "251"
+    },
+    "Yên Lạc": {
+        "ten_truong": "THPT Yên Lạc",
+        "ten_don_vi": "THPT Yên Lạc",
+        "ma_don_vi": "294"
+    },
+    "Bán công Yên Lạc": {
+        "ten_truong": "Bán công Yên Lạc",
+        "ten_don_vi": "THPT Yên Lạc",
+        "ma_don_vi": "294"
+    },
+    "Yên Lạc 2": {
+        "ten_truong": "THPT Yên Lạc 2",
+        "ten_don_vi": "THPT Yên Lạc 2",
+        "ma_don_vi": "295"
+    },
+    "Bán công Phạm Công Bình": {
+        "ten_truong": "Bán công Phạm Công Bình",
+        "ten_don_vi": "THPT Phạm Công Bình",
+        "ma_don_vi": "254"
+    },
+    "Mê Linh": {
+        "ten_truong": "Mê Linh",
+        "ten_don_vi": "Sở GD&ĐT Phú Thọ",
+        "ma_don_vi": "25"
+    },
+    "Yên Lãng": {
+        "ten_truong": "THPT Yên Lãng",
+        "ten_don_vi": "Sở GD&ĐT Phú Thọ",
+        "ma_don_vi": "25"
+    },
+    "Bán công Quang Minh": {
+        "ten_truong": "THPT Quang Minh",
+        "ten_don_vi": "Sở GD&ĐT Phú Thọ",
+        "ma_don_vi": "25"
+    },
+    "Bình Xuyên": {
+        "ten_truong": "THPT Bình Xuyên",
+        "ten_don_vi": "THPT Bình Xuyên",
+        "ma_don_vi": "205"
+    },
+    "Quang Hà": {
+        "ten_truong": "THPT Quang Hà",
+        "ten_don_vi": "THPT Quang Hà",
+        "ma_don_vi": "259"
+    },
+    "Bán công Võ Thị Sáu": {
+        "ten_truong": "THPT Võ Thị Sáu",
+        "ten_don_vi": "THPT Võ Thị Sáu",
+        "ma_don_vi": "289"
+    },
+    "Dân lập Châu Phong": {
+        "ten_truong": "THPT DL Châu Phong",
+        "ten_don_vi": "Sở GD&ĐT Phú Thọ",
+        "ma_don_vi": "25"
+    },
+    "Xuân Hòa": {
+        "ten_truong": "THPT Xuân Hòa",
+        "ten_don_vi": "THPT Xuân Hòa",
+        "ma_don_vi": "291"
+    },
+    "Phúc Yên": {
+        "ten_truong": "THPT Phúc Yên",
+        "ten_don_vi": "THPT Hai Bà Trưng",
+        "ma_don_vi": "220"
+    },
+    "Bán công Phúc Yên": {
+        "ten_truong": "Bán công Phúc Yên",
+        "ten_don_vi": "THPT Hai Bà Trưng",
+        "ma_don_vi": "220"
+    },
+    "Bán công Hai Bà Trưng": {
+        "ten_truong": "Bán công Hai Bà Trưng",
+        "ten_don_vi": "THPT Hai Bà Trưng",
+        "ma_don_vi": "220"
+    },
+    "Tam Đảo": {
+        "ten_truong": "THPT Tam Đảo",
+        "ten_don_vi": "THPT Tam Đảo",
+        "ma_don_vi": "268"
+    }
+}

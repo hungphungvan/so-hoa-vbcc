@@ -1,27 +1,30 @@
 # --- [Cột Template] = [Cột Demo / "Giá trị tĩnh"] # Tên gợi nhớ ---
 
-A =   # STT (Code tự động đánh số)
+A =   # STT (Code đã tự động đánh số 1, 2, 3...)
 B = J # Số hiệu bằng
 C =   # Số vào sổ gốc cấp văn bằng
-D = "Bằng tốt nghiệp THPT" # Tên văn bằng
+D = "Bằng tốt nghiệp trung học phổ thông" # Tên văn bằng (Tự động điền hàng loạt)
 E = C # Họ, chữ đệm và tên
-F =   # Mã người học
-G =   # Số định danh cá nhân
-H =   # Hộ chiếu
-I = D # Ngày, tháng, năm sinh
+F =   # Mã người học (để trống)
+G =   # Số định danh cá nhân (để trống)
+H =   # Hộ chiếu (để trống)
+I = D # Ngày, tháng, năm sinh (Code tự động ép chuẩn dd/MM/yyyy)
 J = L # Giới tính
 K = E # Dân tộc
 L = "Việt Nam" # Quốc tịch
 M = F # Nơi sinh
+
+# 👇 ĐÂY LÀ MỎ NEO QUAN TRỌNG NHẤT (Bắt buộc phải có)
 N = G # Tên trường đã học
-O =   # Niên khóa
+
+O = "2022-2025"  # Niên khóa
 P =   # Điểm các môn thi
 Q = H # Hội đồng thi
-R =   # Địa danh nơi cơ quan cấp bằng đặt trụ sở
-S =   # Ngày tháng năm cấp bằng
-T =   # Tên cơ quan cấp bằng
+R = "Tỉnh Vĩnh Phúc"  # Địa danh nơi cơ quan cấp bằng đặt trụ sở
+S =   # Ngày tháng năm cấp bằng (Code tự ép chuẩn dd/MM/yyyy)
+T = "Sở GD&ĐT Vĩnh Phúc"  # Tên cơ quan cấp bằng
 U =   # Chức danh người ký bằng
 V =   # Họ, chữ đệm, tên người ký bằng
-W = "Bản chính" # Tình trạng văn bằng
+W =   # Tình trạng văn bằng
 X = M # Ghi chú
-Y = "Đã số hóa" # Trạng thái số hóa
+Y = "Đã số hóa đầy đủ, chính xác" # Trạng thái số hóa

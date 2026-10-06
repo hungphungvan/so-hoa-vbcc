@@ -1,0 +1,173 @@
+﻿ma_truong;ten_truong
+25;Sở GD&ĐT Phú Thọ
+001;THPT Chuyên Hùng Vương
+002;THPT Chuyên Hoàng Văn Thụ
+003;THPT Chuyên Vĩnh Phúc
+101;Phổ thông DTNT tỉnh Phú Thọ
+102;Phổ thông DTNT THPT Hòa Bình
+103;Phổ thông DTNT THCS và THPT B Đà Bắc
+104;Phổ thông DTNT THCS và THPT B Mai Châu
+105;Phổ thông DTNT THCS và THPT Cao Phong
+106;Phổ thông DTNT THCS và THPT Đà Bắc
+107;Phổ thông DTNT THCS và THPT Kim Bôi
+108;Phổ thông DTNT THCS và THPT Lạc Sơn
+109;Phổ thông DTNT THCS và THPT Lạc Thủy
+110;Phổ thông DTNT THCS và THPT Lương Sơn
+111;Phổ thông DTNT THCS và THPT Mai Châu
+112;Phổ thông DTNT THCS và THPT Ngọc Sơn
+113;Phổ thông DTNT THCS và THPT Tân Lạc
+114;Phổ thông DTNT THCS và THPT Vĩnh Phúc
+115;Phổ thông DTNT THCS và THPT Yên Lập
+116;Phổ thông DTNT THCS và THPT Yên Thủy
+201;THPT 19-5 Kim Bôi
+202;THPT Bắc Sơn
+203;THPT Bến Tre
+204;THPT Bình Sơn
+205;THPT Bình Xuyên
+206;THPT Cao Phong
+207;THPT Cẩm Khê
+208;THPT Cộng Hòa
+209;THPT Công Nghiệp
+210;THPT Công nghiệp Việt Trì
+211;THPT Cù Chính Lan
+212;THPT Chân Mộng
+213;THPT Đà Bắc
+214;THPT Đại Đồng
+215;THPT Đoan Hùng
+216;THPT Đoàn Kết
+217;THPT Đội Cấn
+218;THPT Đồng Đậu
+219;THPT Hạ Hòa
+220;THPT Hai Bà Trưng
+221;THPT Hiền Đa
+222;THPT Hùng Vương
+223;THPT Hưng Hóa
+224;THPT Hương Cần
+225;THPT Kim Bôi
+226;THPT Kim Ngọc
+227;THPT Kỳ Sơn
+228;THPT Kỹ thuật Việt Trì
+229;THPT Lạc Long Quân
+230;THPT Lạc Sơn
+231;THPT Lạc Thủy
+232;THPT Lạc Thủy B
+233;THPT Lạc Thủy C
+234;THPT Lê Xoay
+235;THPT Liễn Sơn
+236;THPT Long Châu Sa
+237;THPT Lũng Vân
+238;THPT Lương Sơn
+239;THPT Mai Châu
+240;THPT Mai Châu B
+241;THPT Minh Đài
+242;THPT Minh Hòa
+243;THPT Mường Bi
+244;THPT Mường Chiềng
+245;THPT Mỹ Văn
+246;THPT Nam Lương Sơn
+247;THPT Ngô Gia Tự
+248;THPT Ngô Quyền
+249;THPT Nguyễn Duy Thì
+250;THPT Nguyễn Thái Học
+251;THPT Nguyễn Thị Giang
+252;THPT Nguyễn Văn Chất
+253;THPT Nguyễn Viết Xuân
+254;THPT Phạm Công Bình
+255;THPT Phong Châu
+256;THPT Phú Cường
+257;THPT Phù Ninh
+258;THPT Phương Xá
+259;THPT Quang Hà
+260;THPT Quế Lâm
+261;THPT Quyết Thắng
+262;THPT Sáng Sơn
+263;THPT Sào Báy
+264;THPT Sông Lô
+265;THPT Sơn Lương
+266;THPT Tam Dương
+267;THPT Tam Dương II
+268;THPT Tam Đảo
+269;THPT Tam Đảo II
+270;THPT Tam Nông
+271;THPT Tân Lạc
+272;THPT Tân Sơn
+273;THPT Tử Đà
+274;THPT Thạch Yên
+275;THPT Thanh Ba
+276;THPT Thanh Hà
+277;THPT Thanh Sơn
+278;THPT Thanh Thủy
+279;THPT Trần Hưng Đạo
+280;THPT Trần Nguyên Hãn
+281;THPT Trần Phú
+282;THPT Trung Giáp
+283;THPT Trung Nghĩa
+284;THPT Văn Miếu
+285;THPT Văn Quán
+286;THPT Việt Trì
+287;THPT Vĩnh Chân
+288;THPT Vĩnh Yên
+289;THPT Võ Thị Sáu
+290;THPT Xuân Áng
+291;THPT Xuân Hòa
+292;THPT Yên Hòa
+293;THPT Yển Khê
+294;THPT Yên Lạc
+295;THPT Yên Lạc 2
+296;THPT Yên Lập
+297;THPT Yên Thủy A
+298;THPT Yên Thủy B
+299;THPT Yên Thủy C
+300;THPT Quang Trung
+301;PT DTNT THCS&THPT Ngọc Sơn
+401;Phổ thông Chất lượng cao Hùng Vương
+402;Phổ thông Hermann Gmeiner Việt Trì
+403;Phổ thông liên cấp Newton Vĩnh Phúc
+404;Phổ thông liên cấp Sao Mai Hòa Bình
+405;THCS&THPT Đào Duy Từ
+406;THPT Chất lượng cao Văn Lang
+407;THPT Lâm Thao
+408;THPT Liên Bảo
+409;THPT Maya Hòa Bình
+410;THPT Nguyễn Bỉnh Khiêm
+411;THPT Nguyễn Huệ
+412;THPT Nguyễn Tất Thành
+413;THPT Phú Thọ
+414;THPT Sông Thao
+415;THPT Tản Đà
+416;THPT Trần Phú - Việt Trì
+417;THPT Trường Thịnh
+418;THPT Vũ Thê Lang
+501;THCS&THPT Sư phạm
+601;TT DGTX tỉnh Phú Thọ
+602;TT DGTX Hòa Bình
+603;TT DGTX Vĩnh Phúc
+604;TT GDNN - DGTX Bình Xuyên
+605;TT GDNN - DGTX Cao Phong
+606;TT GDNN - DGTX Cẩm Khê
+607;TT GDNN - DGTX Đà Bắc
+608;TT GDNN - DGTX Đoan Hùng
+609;TT GDNN - DGTX Hạ Hòa
+610;TT GDNN - DGTX Hòa Bình
+611;TT GDNN - DGTX Kim Bôi
+612;TT GDNN - DGTX Lạc Sơn
+613;TT GDNN - DGTX Lạc Thủy
+614;TT GDNN - DGTX Lâm Thao
+615;TT GDNN - DGTX Lập Thạch
+616;TT GDNN - DGTX Lương Sơn
+617;TT GDNN - DGTX Mai Châu
+618;TT GDNN - DGTX Phù Ninh
+619;TT GDNN - DGTX Phú Thọ
+620;TT GDNN - DGTX Phúc Yên
+621;TT GDNN - DGTX Tam Dương
+622;TT GDNN - DGTX Tam Đảo
+623;TT GDNN - DGTX Tam Nông
+624;TT GDNN - DGTX Tân Lạc
+625;TT GDNN - DGTX Tân Sơn
+626;TT GDNN - DGTX Thanh Ba
+627;TT GDNN - DGTX Thanh Sơn
+628;TT GDNN - DGTX Thanh Thủy
+629;TT GDNN - DGTX Vĩnh Tường
+630;TT GDNN - DGTX Yên Lạc
+631;TT GDNN - DGTX Yên Lập
+632;TT GDNN - DGTX Yên Thủy
