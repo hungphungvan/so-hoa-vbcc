@@ -12,9 +12,9 @@ def show_menu():
     print("="*40)
     print("1. Chạy OCR trích xuất ảnh sổ sang Excel")
     print("2. Tách trường từ file Excel")
-    print("3. Tổng hợp Danh sách tài liệu số hóa")
+    print("3. Tạo danh sách tài liệu số hóa")
     print("4. Đồng loạt đổi tên Sheet thành 'Data'")
-    print("5. Dọn dẹp dữ liệu thừa (Thiếu cột quan trọng)")
+    print("5. Dọn dẹp dữ liệu lỗi (Thiếu cột quan trọng)")
     print("0. Thoát")
     print("="*40)
 
