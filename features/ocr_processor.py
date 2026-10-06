@@ -1,10 +1,11 @@
 import json
-import csv
 import re
 import time
+import pandas as pd
 from pathlib import Path
 from config import api_client, MODEL_NAME
-from utils import encode_image, read_text_file
+# Nhúng thêm hàm save_file từ utils
+from utils import encode_image, read_text_file, save_file
 
 def extract_table_from_image(image_path: str, prompt_text: str, max_retries: int = 3) -> str:
     """Gửi ảnh qua API có kèm cơ chế tự động thử lại khi lỗi mạng."""
@@ -33,12 +34,12 @@ def extract_table_from_image(image_path: str, prompt_text: str, max_retries: int
         except Exception as e:
             print(f"\n      [!] Lỗi API (Lần thử {attempt + 1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
-                return ""  # Hết lượt thử, trả về chuỗi rỗng để không làm chết chương trình
+                return ""
             print("      -> Đợi 5 giây rồi thử lại...")
             time.sleep(5)
 
 def run_ocr_feature(folder_path_str: str):
-    """Quét ảnh trong thư mục trường, tìm prompt theo 3 cấp, lưu CSV."""
+    """Quét ảnh trong thư mục trường, tìm prompt theo 3 cấp, lưu thẳng ra Excel qua hộp thoại Save As."""
     data_dir = Path(folder_path_str)
 
     valid_extensions = {".jpg", ".jpeg", ".png"}
@@ -50,10 +51,10 @@ def run_ocr_feature(folder_path_str: str):
 
     print(f"\n[+] Tìm thấy {len(image_files)} ảnh trong thư mục '{data_dir.name}' (Năm học: {data_dir.parent.name}).")
 
-    # CẤU TRÚC TÌM KIẾM PROMPT MỚI (3 Cấp bậc)
-    local_prompt = data_dir / "prompt.txt"                        # Cấp 1: Thư mục Trường (VD: data/2007/01/prompt.txt)
-    year_prompt = data_dir.parent / "prompt.txt"                  # Cấp 2: Thư mục Năm (VD: data/2007/prompt.txt)
-    default_prompt = Path(__file__).parent / "default_prompt.txt" # Cấp 3: Mặc định hệ thống
+    # CẤU TRÚC TÌM KIẾM PROMPT
+    local_prompt = data_dir / "prompt.txt"
+    year_prompt = data_dir.parent / "prompt.txt"
+    default_prompt = Path(__file__).parent.parent / "data" / "default_prompt.txt"
 
     if local_prompt.is_file():
         print(f"[+] Đang dùng prompt ưu tiên của TRƯỜNG tại: {local_prompt}")
@@ -76,13 +77,12 @@ def run_ocr_feature(folder_path_str: str):
         try:
             result_text = extract_table_from_image(str(img_path), prompt_text)
 
-            # Nếu hết 3 lần thử mà vẫn lỗi, bỏ qua ảnh này và chạy tiếp ảnh sau
             if not result_text:
                 print("BỎ QUA DO LỖI MẠNG")
                 continue
 
-            # Sử dụng Regex để trích xuất toàn bộ nội dung nằm giữa [ và ]
             match = re.search(r'\[.*\]', result_text, re.DOTALL)
+            json_str = ""
 
             if match:
                 json_str = match.group(0)
@@ -106,30 +106,30 @@ def run_ocr_feature(folder_path_str: str):
     if all_students_data:
         truong_name = data_dir.name
 
-        # Định nghĩa đường dẫn cho cả 2 file lưu ở thư mục Năm học
-        csv_output = data_dir.parent / f"truong_{truong_name}_ketqua.csv"
-        json_output = data_dir.parent / f"truong_{truong_name}_ketqua.json"
+        print("\n[+] Đang mở cửa sổ lưu file... (Kiểm tra taskbar nếu không thấy)")
 
-        # 1. LƯU FILE JSON
+        # Mở hộp thoại Save As, gợi ý sẵn tên file
+        default_filename = f"truong_{truong_name}_ketqua.xlsx"
+        save_path_str = save_file(title="Lưu file kết quả OCR", default_name=default_filename)
+
+        if not save_path_str:
+            print("[-] Bạn đã hủy lưu file. Dữ liệu chưa được xuất ra!")
+            return
+
+        excel_output = Path(save_path_str)
+        # Đổi đuôi file excel thành .json để lưu file backup chung chỗ
+        json_output = excel_output.with_suffix('.json')
+
+        # 1. Lưu file backup JSON
         with open(json_output, "w", encoding="utf-8") as f:
             json.dump(all_students_data, f, ensure_ascii=False, indent=4)
 
-        # 2. TỰ ĐỘNG LẤY CỘT VÀ LƯU FILE CSV
-        fieldnames = []
-        for row in all_students_data:
-            for key in row.keys():
-                if key not in fieldnames:
-                    fieldnames.append(key)
+        # 2. Lưu trực tiếp ra Excel bằng Pandas
+        df = pd.DataFrame(all_students_data)
+        df.to_excel(excel_output, index=False)
 
-        with open(csv_output, "w", encoding="utf-8-sig", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            for row in all_students_data:
-                clean_row = {key: row.get(key, "") for key in fieldnames}
-                writer.writerow(clean_row)
-
-        print(f"\n[=] HOÀN TẤT: Lưu {len(all_students_data)} học sinh.")
-        print(f"  -> Đã tạo: {csv_output}")
-        print(f"  -> Đã tạo: {json_output}\n")
+        print(f"\n[=] HOÀN TẤT: Đã trích xuất {len(all_students_data)} học sinh.")
+        print(f"  -> File Excel : {excel_output}")
+        print(f"  -> File JSON  : {json_output}\n")
     else:
         print("\n[-] Không có dữ liệu hợp lệ để lưu.\n")

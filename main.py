@@ -1,8 +1,8 @@
-import os
 from pathlib import Path
 from utils import select_folder, select_file
 from features.ocr_processor import run_ocr_feature
 from features.excel_splitter import run_excel_splitter
+from features.danhsach_generator import generate_danhsach
 
 def show_menu():
     print("="*40)
@@ -10,7 +10,7 @@ def show_menu():
     print("="*40)
     print("1. Chạy OCR trích xuất ảnh sổ sang CSV")
     print("2. Tách trường từ file Excel")
-    print("3. [Tính năng tương lai] Chuẩn hóa tên & ngày sinh")
+    print("3. Tổng hợp Danh sách tài liệu số hóa")
     print("0. Thoát")
     print("="*40)
 
@@ -54,6 +54,18 @@ def main():
 
             # Chạy tiến trình
             run_excel_splitter(str(input_file), str(template_file), str(mapping_file), str(output_dir))
+
+        elif choice == "3":
+            print("\n--- CHỨC NĂNG TỔNG HỢP DANH SÁCH ---")
+            template_danhsach_file = Path("data/template_danhsach.xlsx")
+
+            # Kiểm tra file mẫu danh sách
+            if not template_danhsach_file.exists():
+                print(f"[-] LỖI: Không tìm thấy file mẫu tại '{template_danhsach_file}'. Vui lòng bổ sung!")
+                continue
+
+            # Chạy tiến trình tổng hợp (hộp thoại chọn thư mục đã được tích hợp sẵn bên trong)
+            generate_danhsach(str(template_danhsach_file))
 
         elif choice == "0":
             print("Đang thoát chương trình...")
