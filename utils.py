@@ -72,3 +72,56 @@ def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list 
     )
     root.destroy()
     return file_path
+
+def is_empty(val) -> bool:
+    """Kiểm tra xem một ô có trống không (chấp nhận STT không phải là số)."""
+    if val is None:
+        return True
+    if str(val).strip() == "":
+        return True
+    return False
+
+def trim_ghost_rows(ws) -> int:
+    """Tìm và chặt bỏ toàn bộ các dòng rác (trống hoàn toàn) ở cuối bảng tính."""
+    max_row = ws.max_row
+    max_col = ws.max_column
+    real_max = 1
+
+    # Quét từ dưới lên trên để tìm dòng thực sự có chứa dữ liệu
+    for r in range(max_row, 0, -1):
+        has_data = False
+        for c in range(1, max_col + 1):
+            if not is_empty(ws.cell(row=r, column=c).value):
+                has_data = True
+                break
+
+        if has_data:
+            real_max = r
+            break
+
+    deleted_count = 0
+    if max_row > real_max:
+        deleted_count = max_row - real_max
+        ws.delete_rows(real_max + 1, deleted_count)
+
+    return deleted_count
+
+def find_data_start_row(ws, max_scan=15) -> int:
+    """
+    Quét các dòng đầu tiên để tự động tìm dòng tiêu đề của bảng dữ liệu.
+    Dữ liệu sẽ bắt đầu ở dòng ngay bên dưới dòng tiêu đề đó.
+    """
+    keywords = ['stt', 'số thứ tự', 'họ và tên', 'họ tên', 'số hiệu bằng']
+
+    # Quét 15 dòng đầu tiên
+    for row_idx in range(1, min(max_scan, ws.max_row) + 1):
+        # Lấy giá trị của 20 cột đầu tiên đưa về chữ thường để so sánh
+        row_vals = [str(ws.cell(row=row_idx, column=c).value).strip().lower()
+                    for c in range(1, 20) if ws.cell(row=row_idx, column=c).value]
+
+        # Nếu phát hiện thấy từ khóa của dòng tiêu đề
+        for val in row_vals:
+            if any(kw == val for kw in keywords):
+                return row_idx + 1  # Trả về dòng ngay dưới dòng tiêu đề
+
+    return 2 # Trả về 2 nếu không tìm thấy (giữ nguyên logic cũ làm fallback)

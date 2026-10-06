@@ -4,6 +4,7 @@ from features.ocr_processor import run_ocr_feature
 from features.excel_splitter import run_excel_splitter
 from features.danhsach_generator import generate_danhsach
 from features.sheet_renamer import run_sheet_renamer
+from features.data_cleaner import run_data_cleaner
 
 def show_menu():
     print("="*40)
@@ -13,13 +14,14 @@ def show_menu():
     print("2. Tách trường từ file Excel")
     print("3. Tổng hợp Danh sách tài liệu số hóa")
     print("4. Đồng loạt đổi tên Sheet thành 'Data'")
+    print("5. Dọn dẹp dữ liệu thừa (Thiếu cột quan trọng)")
     print("0. Thoát")
     print("="*40)
 
 def main():
     while True:
         show_menu()
-        choice = input("Nhập lựa chọn của bạn (0-4): ").strip()
+        choice = input("Nhập lựa chọn của bạn (0-5): ").strip()
 
         if choice == "1":
             print("\nVui lòng chọn thư mục chứa ảnh...")
@@ -65,6 +67,9 @@ def main():
 
         elif choice == "4":
             run_sheet_renamer()
+
+        elif choice == "5":
+            run_data_cleaner()
 
         elif choice == "0":
             print("Đang thoát chương trình...")
