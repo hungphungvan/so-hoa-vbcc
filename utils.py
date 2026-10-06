@@ -106,22 +106,35 @@ def trim_ghost_rows(ws) -> int:
 
     return deleted_count
 
-def find_data_start_row(ws, max_scan=15) -> int:
+def get_header_keywords(config_file, default_keywords) -> list:
+    """Đọc danh sách từ khóa nhận diện tiêu đề từ file cấu hình riêng của từng module."""
+    path = Path(config_file)
+    if path.exists():
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                file_kws = [line.strip().lower() for line in f if line.strip()]
+                if file_kws:
+                    return file_kws
+        except Exception:
+            pass
+    return default_keywords # Trả về mặc định nếu file không tồn tại
+
+def find_data_start_row(ws, max_scan=15, config_file="data/tu_khoa_nhan_dien.txt", default_keywords=None) -> int:
     """
     Quét các dòng đầu tiên để tự động tìm dòng tiêu đề của bảng dữ liệu.
-    Dữ liệu sẽ bắt đầu ở dòng ngay bên dưới dòng tiêu đề đó.
+    Mỗi module sẽ tự truyền vào config_file và default_keywords của riêng nó.
     """
-    keywords = ['stt', 'số thứ tự', 'họ và tên', 'họ tên', 'số hiệu bằng']
+    if default_keywords is None:
+        default_keywords = ['stt', 'số thứ tự', 'họ và tên', 'tt', 'sbd']
 
-    # Quét 15 dòng đầu tiên
+    keywords = get_header_keywords(config_file, default_keywords)
+
     for row_idx in range(1, min(max_scan, ws.max_row) + 1):
-        # Lấy giá trị của 20 cột đầu tiên đưa về chữ thường để so sánh
         row_vals = [str(ws.cell(row=row_idx, column=c).value).strip().lower()
                     for c in range(1, 20) if ws.cell(row=row_idx, column=c).value]
 
-        # Nếu phát hiện thấy từ khóa của dòng tiêu đề
         for val in row_vals:
             if any(kw == val for kw in keywords):
-                return row_idx + 1  # Trả về dòng ngay dưới dòng tiêu đề
+                return row_idx + 1
 
-    return 2 # Trả về 2 nếu không tìm thấy (giữ nguyên logic cũ làm fallback)
+    return 2

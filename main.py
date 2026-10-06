@@ -5,6 +5,7 @@ from features.excel_splitter import run_excel_splitter
 from features.danhsach_generator import generate_danhsach
 from features.sheet_renamer import run_sheet_renamer
 from features.data_cleaner import run_data_cleaner
+from features.sheet_merger import run_sheet_merger
 
 def show_menu():
     print("="*40)
@@ -14,14 +15,15 @@ def show_menu():
     print("2. Tách trường từ file Excel")
     print("3. Tạo danh sách tài liệu số hóa")
     print("4. Đồng loạt đổi tên Sheet thành 'Data'")
-    print("5. Dọn dẹp dữ liệu lỗi (Thiếu cột quan trọng)")
+    print("5. Dọn dẹp dữ liệu thừa & Chuẩn hóa STT")
+    print("6. Gộp nhiều sheet thành 1 sheet duy nhất")
     print("0. Thoát")
     print("="*40)
 
 def main():
     while True:
         show_menu()
-        choice = input("Nhập lựa chọn của bạn (0-5): ").strip()
+        choice = input("Nhập lựa chọn của bạn (0-6): ").strip()
 
         if choice == "1":
             print("\nVui lòng chọn thư mục chứa ảnh...")
@@ -58,11 +60,9 @@ def main():
 
         elif choice == "3":
             template_danhsach_path = Path("data/template_danhsach.xlsx")
-
             if not template_danhsach_path.exists():
                 print(f"[-] LỖI: Không tìm thấy file mẫu tại '{template_danhsach_path}'. Vui lòng bổ sung!")
                 continue
-
             generate_danhsach(str(template_danhsach_path))
 
         elif choice == "4":
@@ -70,6 +70,9 @@ def main():
 
         elif choice == "5":
             run_data_cleaner()
+
+        elif choice == "6":
+            run_sheet_merger()
 
         elif choice == "0":
             print("Đang thoát chương trình...")

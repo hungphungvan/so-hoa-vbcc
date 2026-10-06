@@ -66,8 +66,14 @@ def run_data_cleaner():
             ws = wb.active
             is_modified = False
 
-            # ĐỊNH VỊ DÒNG BẮT ĐẦU DỮ LIỆU (tái sử dụng từ utils)
-            start_row = find_data_start_row(ws)
+            # ĐỊNH VỊ DÒNG BẮT ĐẦU (Dùng bộ từ khóa KHẮT KHE cho chuẩn đầu ra hệ thống)
+            cleaner_keywords = ['stt', 'số hiệu bằng', 'họ và tên', 'hội đồng thi']
+            start_row = find_data_start_row(
+                ws,
+                config_file="data/tu_khoa_cleaner.txt",
+                default_keywords=cleaner_keywords
+            )
+
             if start_row != 2:
                 print(f"  -> Bảng dữ liệu tự động xác định bắt đầu từ dòng {start_row}.")
 
