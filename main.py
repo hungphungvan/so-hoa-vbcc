@@ -3,21 +3,23 @@ from utils import select_folder, select_file
 from features.ocr_processor import run_ocr_feature
 from features.excel_splitter import run_excel_splitter
 from features.danhsach_generator import generate_danhsach
+from features.sheet_renamer import run_sheet_renamer
 
 def show_menu():
     print("="*40)
     print("HỆ THỐNG SỐ HÓA VĂN BẰNG CHỨNG CHỈ")
     print("="*40)
-    print("1. Chạy OCR trích xuất ảnh sổ sang CSV")
+    print("1. Chạy OCR trích xuất ảnh sổ sang Excel")
     print("2. Tách trường từ file Excel")
     print("3. Tổng hợp Danh sách tài liệu số hóa")
+    print("4. Đồng loạt đổi tên Sheet thành 'Data'")
     print("0. Thoát")
     print("="*40)
 
 def main():
     while True:
         show_menu()
-        choice = input("Nhập lựa chọn của bạn (0-3): ").strip()
+        choice = input("Nhập lựa chọn của bạn (0-4): ").strip()
 
         if choice == "1":
             print("\nVui lòng chọn thư mục chứa ảnh...")
@@ -28,11 +30,9 @@ def main():
                 print("[-] Đã hủy chọn thư mục.\n")
 
         elif choice == "2":
-            # Đường dẫn tĩnh cố định
             template_file = Path("data/template.xlsx")
             mapping_file = Path("data/quy_tac_anh_xa.txt")
 
-            # Kiểm tra xem có quên file không
             if not template_file.exists():
                 print(f"[-] LỖI: Không tìm thấy file mẫu tại '{template_file}'. Vui lòng bổ sung!")
                 continue
@@ -52,27 +52,26 @@ def main():
                 print("[-] Đã hủy thao tác.")
                 continue
 
-            # Chạy tiến trình
             run_excel_splitter(str(input_file), str(template_file), str(mapping_file), str(output_dir))
 
         elif choice == "3":
-            print("\n--- CHỨC NĂNG TỔNG HỢP DANH SÁCH ---")
-            template_danhsach_file = Path("data/template_danhsach.xlsx")
+            template_danhsach_path = Path("data/template_danhsach.xlsx")
 
-            # Kiểm tra file mẫu danh sách
-            if not template_danhsach_file.exists():
-                print(f"[-] LỖI: Không tìm thấy file mẫu tại '{template_danhsach_file}'. Vui lòng bổ sung!")
+            if not template_danhsach_path.exists():
+                print(f"[-] LỖI: Không tìm thấy file mẫu tại '{template_danhsach_path}'. Vui lòng bổ sung!")
                 continue
 
-            # Chạy tiến trình tổng hợp (hộp thoại chọn thư mục đã được tích hợp sẵn bên trong)
-            generate_danhsach(str(template_danhsach_file))
+            generate_danhsach(str(template_danhsach_path))
+
+        elif choice == "4":
+            run_sheet_renamer()
 
         elif choice == "0":
             print("Đang thoát chương trình...")
             break
 
         else:
-            print("\n[-] Tính năng chưa khả dụng hoặc lựa chọn không hợp lệ. Vui lòng thử lại!\n")
+            print("\n[-] Lựa chọn không hợp lệ. Vui lòng thử lại!\n")
 
 if __name__ == "__main__":
     main()
