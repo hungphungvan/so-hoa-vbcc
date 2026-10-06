@@ -1,27 +1,27 @@
-# Bảng quy tắc ánh xạ dữ liệu
-# Lưu ý: Viết chữ cái in hoa (A, B, C...)
+# --- [Cột Template] = [Cột Demo / "Giá trị tĩnh"] # Tên gợi nhớ ---
 
-# --- CÁC CỘT LẤY TỪ FILE DỮ LIỆU ---
-STT = A
-Số hiệu bằng = J
-Họ, chữ đệm và tên = C
-Ngày, tháng, năm sinh = D
-Giới tính = L
-Dân tộc = E
-Nơi sinh = F
-Tên trường đã học = H
-Hội đồng thi = G
-Ghi chú = M
-
-# --- CÁC CỘT CÓ GIÁ TRỊ CỐ ĐỊNH (Điền hàng loạt) ---
-Tên văn bằng = "Bằng tốt nghiệp THPT"
-Quốc tịch = "Việt Nam"
-Trạng thái số hóa = "Đã số hóa"
-Tên cơ quan cấp bằng = "Sở GD&ĐT Vĩnh Phúc"
-Địa danh nơi cơ quan cấp bằng đặt trụ sở = "Tỉnh Vĩnh Phúc"
-Trạng thái số hóa = "Đã số hóa đầy đủ, chính xác"
-
-
-# --- CÁC CỘT BỎ TRỐNG ---
-Mã người học =
-Hộ chiếu =
+A =   # STT (Code tự động đánh số)
+B = J # Số hiệu bằng
+C =   # Số vào sổ gốc cấp văn bằng
+D = "Bằng tốt nghiệp THPT" # Tên văn bằng
+E = C # Họ, chữ đệm và tên
+F =   # Mã người học
+G =   # Số định danh cá nhân
+H =   # Hộ chiếu
+I = D # Ngày, tháng, năm sinh
+J = L # Giới tính
+K = E # Dân tộc
+L = "Việt Nam" # Quốc tịch
+M = F # Nơi sinh
+N = G # Tên trường đã học
+O =   # Niên khóa
+P =   # Điểm các môn thi
+Q = H # Hội đồng thi
+R =   # Địa danh nơi cơ quan cấp bằng đặt trụ sở
+S =   # Ngày tháng năm cấp bằng
+T =   # Tên cơ quan cấp bằng
+U =   # Chức danh người ký bằng
+V =   # Họ, chữ đệm, tên người ký bằng
+W = "Bản chính" # Tình trạng văn bằng
+X = M # Ghi chú
+Y = "Đã số hóa" # Trạng thái số hóa
