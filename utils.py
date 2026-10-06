@@ -20,3 +20,18 @@ def select_folder(title: str = "Chọn thư mục") -> str:
     root.attributes('-topmost', True)
     folder = filedialog.askdirectory(title=title)
     return folder
+
+def select_file(title: str = "Chọn file", filetypes: list = None) -> str:
+    """Mở hộp thoại chọn file cụ thể bằng Tkinter."""
+    if filetypes is None:
+        filetypes = [("Excel files", "*.xlsx *.xls")]
+
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes('-topmost', True) # Ép cửa sổ luôn nổi lên trên cùng
+    file_path = filedialog.askopenfilename(title=title, filetypes=filetypes)
+
+    # Hủy root sau khi chọn xong để tránh treo trên macOS
+    root.destroy()
+
+    return file_path

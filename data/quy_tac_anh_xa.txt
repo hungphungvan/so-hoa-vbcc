@@ -1,0 +1,27 @@
+# Bảng quy tắc ánh xạ dữ liệu
+# Lưu ý: Viết chữ cái in hoa (A, B, C...)
+
+# --- CÁC CỘT LẤY TỪ FILE DỮ LIỆU ---
+STT = A
+Số hiệu bằng = J
+Họ, chữ đệm và tên = C
+Ngày, tháng, năm sinh = D
+Giới tính = L
+Dân tộc = E
+Nơi sinh = F
+Tên trường đã học = H
+Hội đồng thi = G
+Ghi chú = M
+
+# --- CÁC CỘT CÓ GIÁ TRỊ CỐ ĐỊNH (Điền hàng loạt) ---
+Tên văn bằng = "Bằng tốt nghiệp THPT"
+Quốc tịch = "Việt Nam"
+Trạng thái số hóa = "Đã số hóa"
+Tên cơ quan cấp bằng = "Sở GD&ĐT Vĩnh Phúc"
+Địa danh nơi cơ quan cấp bằng đặt trụ sở = "Tỉnh Vĩnh Phúc"
+Trạng thái số hóa = "Đã số hóa đầy đủ, chính xác"
+
+
+# --- CÁC CỘT BỎ TRỐNG ---
+Mã người học =
+Hộ chiếu =
