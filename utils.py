@@ -47,7 +47,7 @@ def select_folder(title: str = "Chọn thư mục") -> str:
         end tell
         return POSIX path of f
         """
-        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True, check=False)
         return result.stdout.strip() if result.returncode == 0 else ""
     else:
         root = tk.Tk()
@@ -67,7 +67,7 @@ def select_file(title: str = "Chọn file", filetypes: list | None = None) -> st
         end tell
         return POSIX path of f
         """
-        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True, check=False)
         return result.stdout.strip() if result.returncode == 0 else ""
     else:
         if filetypes is None:
@@ -89,7 +89,7 @@ def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list 
         end tell
         return POSIX path of f
         """
-        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True, check=False)
         return result.stdout.strip() if result.returncode == 0 else ""
     else:
         if filetypes is None:
