@@ -8,6 +8,9 @@ import pandas as pd
 from openpyxl.utils.cell import column_index_from_string
 from thefuzz import process
 
+# Nhập hàm dò tìm thông minh từ utils
+from utils import find_data_start_row
+
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 def load_mapping_rules(mapping_file: str) -> dict:
@@ -45,6 +48,17 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
     print(f"\n[+] Đang nạp quy tắc ánh xạ từ: {Path(mapping_file).name}")
     mapping_rules = load_mapping_rules(mapping_file)
 
+    # 1. KIỂM TRA TÍNH HỢP LỆ CỦA FILE TEMPLATE TRƯỚC KHI CHẠY
+    try:
+        wb_temp = openpyxl.load_workbook(template_file)
+        if 'Data' not in wb_temp.sheetnames:
+            print("[-] LỖI: File template không có sheet 'Data'. Vui lòng kiểm tra lại file mẫu!")
+            return
+        wb_temp.close()
+    except Exception as e:  # noqa: BLE001
+        print(f"[-] LỖI: Không thể mở file template {template_file}. Chi tiết: {e}")
+        return
+
     catalog_file = Path("data/danh_muc_truong.csv")
     standard_schools = {}
     if catalog_file.exists():
@@ -56,20 +70,43 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
         try:
             with open(history_file, 'r', encoding='utf-8') as f:
                 approved_mapping = json.load(f)
-                # FIX 1: Chỉ dùng values() vì không cần khóa k
                 for v in approved_mapping.values():
                     if not isinstance(v, dict):
                         print("[!] Cấu trúc lịch sử cũ không còn tương thích. Hệ thống sẽ học lại từ đầu...")
                         approved_mapping = {}
                         break
-        # FIX 2: Thêm noqa để bỏ qua cảnh báo vơ vét lỗi
         except Exception:  # noqa: BLE001
             approved_mapping = {}
 
+    # 2. DÙNG OPENPYXL ĐỂ DÒ TÌM DÒNG BẮT ĐẦU CHUẨN XÁC CỦA FILE INPUT
+    try:
+        wb_in = openpyxl.load_workbook(input_file, data_only=True)
+        ws_in = wb_in.active
+
+        default_kws = ['stt', 'số hiệu bằng', 'họ và tên', 'hội đồng thi', 'nơi sinh', 'giới tính', 'dân tộc']
+        start_row = find_data_start_row(
+            ws_in,
+            config_file="data/tu_khoa_splitter.txt",
+            default_keywords=default_kws,
+            default_start_row=None
+        )
+        wb_in.close()
+
+        if start_row is None:
+            print("[-] LỖI: File input không chứa cấu trúc bảng dữ liệu hợp lệ (Không đủ từ khóa).")
+            return
+
+        print(f"  -> Đã nhận diện cấu trúc file nguồn. Dữ liệu bắt đầu từ dòng: {start_row}")
+
+    except Exception as e:  # noqa: BLE001
+        print(f"[-] LỖI đọc file input bằng openpyxl: {e}")
+        return
+
+    # 3. ĐỌC DỮ LIỆU BẰNG PANDAS VÀ CẮT GHÉP CHUẨN XÁC
     try:
         df = pd.read_excel(input_file, sheet_name=0, header=None)
     except Exception as e:  # noqa: BLE001
-        print(f"[-] LỖI đọc file input: {e}")
+        print(f"[-] LỖI đọc file input bằng Pandas: {e}")
         return
 
     SCHOOL_TEMPLATE_COL = "N"
@@ -77,12 +114,11 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
         print(f"[-] LỖI: Bắt buộc cấu hình ánh xạ cho cột {SCHOOL_TEMPLATE_COL} để tách file.")
         return
 
-    # FIX 3: Thêm _ trước map_type vì biến này không được xài đến
     _map_type, map_val = mapping_rules[SCHOOL_TEMPLATE_COL]
     school_col_idx = column_index_from_string(map_val) - 1
 
-    DATA_START_ROW = 3
-    df_data = df.iloc[DATA_START_ROW:].copy()
+    # Cắt DataFrame từ dòng start_row (index trong Pandas là start_row - 1)
+    df_data = df.iloc[start_row - 1:].copy()
     df_data = df_data.dropna(subset=[school_col_idx])
 
     raw_schools = df_data[school_col_idx].unique()
@@ -95,7 +131,6 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
     for raw_name in raw_schools:
         raw_name_str = str(raw_name).strip()
 
-        # 1. Nếu tên chuẩn 100% -> Trường độc lập, Đơn vị = Tên trường
         if raw_name_str in standard_schools:
             if raw_name_str not in approved_mapping:
                 approved_mapping[raw_name_str] = {
@@ -105,16 +140,12 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                 }
             continue
 
-        # 2. Đã từng được xác nhận trong lịch sử
         if raw_name_str in approved_mapping:
             continue
 
-        # 3. Tên lạ (Sai chính tả hoặc Trường giải thể) -> Hỏi người dùng 2 bước
-        # FIX 4: Xóa chữ 'f' vô nghĩa ở chuỗi có dấu '='
         print("\n" + "="*60)
         print(f"[?] PHÁT HIỆN TRƯỜNG CHƯA CHUẨN: '{raw_name_str}'")
 
-        # --- BƯỚC 3.1: Xác định ĐƠN VỊ QUẢN LÝ ---
         unit_name = ""
         unit_code = ""
         if list_standard_names:
@@ -149,8 +180,6 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                 unit_name = matches[choice - 1][0]
                 unit_code = standard_schools[unit_name]
 
-        # --- BƯỚC 3.2: Xác định TÊN TRƯỜNG ĐÃ HỌC ---
-        # FIX 5: Xóa chữ 'f' vô nghĩa ở chuỗi này
         print("\n[BƯỚC 2] 'Tên trường đã học' ghi trên phôi bằng của học sinh sẽ là gì?")
         print(f"  1. Giữ nguyên gốc: '{raw_name_str}' (Dành cho trường giải thể/sát nhập)")
         print(f"  2. Lấy tên Đơn vị: '{unit_name}' (Dành cho lỗi sai chính tả)")
@@ -171,7 +200,6 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                     break
             print("[-] Vui lòng chọn 1, 2 hoặc 3.")
 
-        # Lưu lại lịch sử
         approved_mapping[raw_name_str] = {
             "ten_truong": final_school_name,
             "ten_don_vi": unit_name,
@@ -208,23 +236,21 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
             elif header_val == "Tên đơn vị":
                 ten_dv_col = cell.column
 
-        start_row = 3
+        current_out_row = 3  # Đổi tên để tránh nhầm với start_row lúc quét
         stt_counter = 1
 
         for _, row in df_school.iterrows():
-            # FIX 6: Truyền value vào tham số để tránh lỗi gán cho MergedCell
-            ws.cell(row=start_row, column=1, value=stt_counter)
+            ws.cell(row=current_out_row, column=1, value=stt_counter)
 
             for temp_letter, (m_type, m_val) in mapping_rules.items():
                 if temp_letter == "A":
                     continue
                 col_idx = column_index_from_string(temp_letter)
                 if m_type == 'const':
-                    ws.cell(row=start_row, column=col_idx, value=m_val)
+                    ws.cell(row=current_out_row, column=col_idx, value=m_val)
                 elif m_type == 'col':
                     demo_idx = column_index_from_string(m_val) - 1
                     if demo_idx < len(row):
-                        # Cột N (Tên trường) giờ sẽ dùng final_school_name (Tên lịch sử hoặc Tên đã sửa chính tả)
                         if demo_idx == school_col_idx:
                             val = final_school_name
                         else:
@@ -245,18 +271,16 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                             else:
                                 val = str(val).strip()
 
-                        ws.cell(row=start_row, column=col_idx, value=val)
+                        ws.cell(row=current_out_row, column=col_idx, value=val)
 
-            # Ghi tự động Đơn vị quản lý vào các cột tương ứng nếu có
             if ma_dv_col:
-                ws.cell(row=start_row, column=ma_dv_col, value=unit_code)
+                ws.cell(row=current_out_row, column=ma_dv_col, value=unit_code)
             if ten_dv_col:
-                ws.cell(row=start_row, column=ten_dv_col, value=unit_name)
+                ws.cell(row=current_out_row, column=ten_dv_col, value=unit_name)
 
-            start_row += 1
+            current_out_row += 1
             stt_counter += 1
 
-        # Tên file xuất ra chỉ lấy Tên trường đã học và Số lượng học sinh
         safe_school_name = re.sub(r'[<>:"/\\|?*]', '_', final_school_name).strip()
         num_students = len(df_school)
 
