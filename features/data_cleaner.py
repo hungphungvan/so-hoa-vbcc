@@ -19,7 +19,7 @@ def run_data_cleaner():
         return
 
     target_dir = Path(folder_path)
-    excel_files = [f for f in target_dir.iterdir() if f.is_file() and f.suffix in ['.xlsx', '.xls'] and not f.name.startswith('~')]
+    excel_files = [f for f in target_dir.iterdir() if f.is_file() and f.suffix in ['.xlsx', '.xls'] and not f.name.startswith('~') and not f.name.startswith('DS_Tai_Lieu_So_Hoa')]
 
     if not excel_files:
         print(f"[-] Không tìm thấy file Excel nào trong thư mục {target_dir.name}")
@@ -27,11 +27,9 @@ def run_data_cleaner():
 
     print(f"\n[+] Đã tìm thấy {len(excel_files)} file. Bắt đầu xử lý...\n")
 
-    # Cấu hình màu sắc
-    yellow_fill = PatternFill(start_color="FFFFFF00", end_color="FFFFFF00", fill_type="solid") # Vàng cho ô thiếu
-    red_fill = PatternFill(start_color="FFFF9999", end_color="FFFF9999", fill_type="solid")    # Đỏ nhạt cho dòng rác
+    yellow_fill = PatternFill(start_color="FFFFFF00", end_color="FFFFFF00", fill_type="solid")
+    red_fill = PatternFill(start_color="FFFF9999", end_color="FFFF9999", fill_type="solid")
 
-    # 18 cột bắt buộc (Đã bỏ Cột A-STT và Cột E-Họ tên)
     MANDATORY_COLS = {
         "Số hiệu bằng (B)": 2,
         "Tên văn bằng (D)": 4,
@@ -53,6 +51,8 @@ def run_data_cleaner():
         "Tên đơn vị (AB)": 28
     }
 
+    default_kws = ['stt', 'số hiệu bằng', 'họ và tên', 'hội đồng thi', 'nơi sinh', 'giới tính', 'dân tộc']
+
     files_with_issues = []
     count_processed = 0
 
@@ -60,51 +60,65 @@ def run_data_cleaner():
         print(f"\n--- Đang xử lý: {file_path.name} ---")
         try:
             wb = openpyxl.load_workbook(file_path)
-            sheet = wb.active
+            target_sheet = None
+            start_row = None
 
-            if sheet is None:
-                print("  [!] File không có sheet nào hợp lệ.")
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+
+                found_row = find_data_start_row(
+                    ws,
+                    config_file="data/tu_khoa_cleaner.txt",
+                    default_keywords=default_kws,
+                    default_start_row=None
+                )
+
+                if found_row is not None:
+                    target_sheet = ws
+                    start_row = found_row
+                    break
+
+            # CHỐT CHẶN BẢO MẬT TYPE HINT CHO PYRIGHT
+            if target_sheet is None or start_row is None:
+                print("  [!] KHÔNG TÌM THẤY sheet nào chứa dữ liệu hợp lệ (Thiếu cột chuẩn). Bỏ qua file.")
                 continue
 
             is_modified = False
 
-            # 1. Chuẩn hóa tên sheet thành Data
-            if sheet.title != "Data":
-                sheet.title = "Data"
-                is_modified = True
-                print("  -> Đã đổi tên sheet thành 'Data'.")
+            if target_sheet.title != "Data":
+                if "Data" in wb.sheetnames:
+                    wb["Data"].title = "Data_old"
 
-            # 2. Cắt tỉa dòng ma (trắng tinh ở cuối file)
-            ghost_deleted = trim_ghost_rows(sheet)
+                old_name = target_sheet.title
+                target_sheet.title = "Data"
+                is_modified = True
+                print(f"  -> Đã xác định và đổi tên sheet '{old_name}' thành 'Data'.")
+            else:
+                print("  -> Đã xác định đúng sheet 'Data'.")
+
+            ghost_deleted = trim_ghost_rows(target_sheet)
             if ghost_deleted > 0:
                 is_modified = True
                 print(f"  -> Đã gọt sạch {ghost_deleted} 'dòng ma' ở đuôi file.")
 
-            # 3. Định vị dòng dữ liệu
-            start_row = find_data_start_row(sheet)
-
-            # 4. Rà soát dữ liệu & Tô màu
             has_issue = False
             red_rows = 0
             yellow_cells = 0
 
-            for r in range(start_row, sheet.max_row + 1):
-                # Bỏ qua nếu dòng này hoàn toàn trống (chỉ soi từ cột 1 đến 30)
-                if all(is_empty(sheet.cell(row=r, column=c).value) for c in range(1, 30)):
+            # Lúc này start_row chắc chắn là int, hàm range() sẽ không bị cảnh báo nữa
+            for r in range(start_row, target_sheet.max_row + 1):
+                if all(is_empty(target_sheet.cell(row=r, column=c).value) for c in range(1, 30)):
                     continue
 
-                # KIỂM ĐỊNH 1: Dòng rác (Thiếu Họ Tên ở Cột 5) -> Tô ĐỎ NHẠT cả dòng
-                if is_empty(sheet.cell(row=r, column=5).value):
-                    for c in range(1, 30): # Tô đến cột AC cho gọn mắt
-                        sheet.cell(row=r, column=c).fill = red_fill
+                if is_empty(target_sheet.cell(row=r, column=5).value):
+                    for c in range(1, 30):
+                        target_sheet.cell(row=r, column=c).fill = red_fill
                     has_issue = True
                     is_modified = True
                     red_rows += 1
-
-                # KIỂM ĐỊNH 2: Dòng hợp lệ (Có Họ tên) -> Soi 18 cột bắt buộc -> Tô VÀNG ô thiếu
                 else:
                     for col_idx in MANDATORY_COLS.values():
-                        cell = sheet.cell(row=r, column=col_idx)
+                        cell = target_sheet.cell(row=r, column=col_idx)
                         if is_empty(cell.value):
                             cell.fill = yellow_fill
                             has_issue = True
@@ -127,7 +141,6 @@ def run_data_cleaner():
     print("\n" + "="*60)
     print(f"[=] HOÀN TẤT CHUẨN HOÁ ({count_processed}/{len(excel_files)} file)!")
 
-    # 5. Xuất Bảng phong thần
     if files_with_issues:
         print("\n" + "!"*60)
         print(" [BẢNG PHONG THẦN - CÁC FILE CẦN BẠN MỞ RA SỬA TAY]")

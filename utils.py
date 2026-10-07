@@ -169,19 +169,32 @@ def get_header_keywords(config_file, default_keywords) -> list:
 
     return default_keywords
 
-def find_data_start_row(ws, max_scan=15, config_file="data/tu_khoa_nhan_dien.txt", default_keywords=None, default_start_row=3) -> int:
-    """Quét các dòng đầu tiên để tự động tìm dòng tiêu đề của bảng dữ liệu."""
+def find_data_start_row(
+    ws,
+    max_scan: int = 15,
+    config_file: str = "data/tu_khoa_nhan_dien.txt",
+    default_keywords: list | None = None,
+    default_start_row: int | None = 3
+) -> int | None:
+    """
+    Quét các dòng đầu tiên để tự động tìm dòng tiêu đề của bảng dữ liệu.
+    Sử dụng cơ chế đếm từ khóa (cố định yêu cầu >= 3 từ khóa) để chống nhận diện nhầm.
+    """
     if default_keywords is None:
         default_keywords = ['stt', 'số thứ tự', 'họ và tên', 'tt', 'sbd']
 
     keywords = get_header_keywords(config_file, default_keywords)
 
     for row_idx in range(1, min(max_scan, ws.max_row) + 1):
+        # Mở rộng quét lên 30 cột để bắt hết form ngang dài
         row_vals = [str(ws.cell(row=row_idx, column=c).value).strip().lower()
-                    for c in range(1, 20) if ws.cell(row=row_idx, column=c).value]
+                    for c in range(1, 31) if ws.cell(row=row_idx, column=c).value]
 
-        for val in row_vals:
-            if any(kw == val for kw in keywords):
-                return row_idx + 1
+        # Đếm số lượng từ khóa xuất hiện trên cùng một dòng
+        matched_count = sum(1 for kw in keywords if kw in row_vals)
+
+        # CHỐT CỨNG: Phải đạt ít nhất 3 từ khóa mới xác định là dòng tiêu đề
+        if matched_count >= 3:
+            return row_idx + 1
 
     return default_start_row

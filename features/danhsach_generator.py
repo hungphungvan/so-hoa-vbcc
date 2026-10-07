@@ -3,7 +3,7 @@ from pathlib import Path
 
 import openpyxl
 
-from utils import select_folder
+from utils import find_data_start_row, select_folder
 
 
 def generate_danhsach(template_danhsach_path: str):
@@ -26,29 +26,23 @@ def generate_danhsach(template_danhsach_path: str):
     tinh_trang = "Nguyên vẹn"
     ngay_lap_so = datetime.now(tz=UTC).astimezone().strftime("%d/%m/%Y")
 
+    # BƯỚC MỞ TEMPLATE: Ép buộc phải có sheet 'Data'
     try:
         wb = openpyxl.load_workbook(template_danhsach_path)
-        if 'Data' in wb.sheetnames:
-            ws = wb['Data']
-        else:
-            ws = wb.active
-            if ws is not None:
-                ws.title = 'Data'
-
-        if ws is None:
-            print("[-] LỖI: Template Excel không có bảng tính nào hợp lệ.")
+        if 'Data' not in wb.sheetnames:
+            print("[-] LỖI: File template không có sheet 'Data'. Vui lòng kiểm tra lại file mẫu!")
             return
+
+        ws = wb['Data']
 
     except Exception as e:  # noqa: BLE001
         print(f"[-] LỖI: Không thể mở file {template_danhsach_path}. Chi tiết: {e}")
         return
 
     # Dòng 1 là tên bảng, dòng 2 là tiêu đề cột -> Bắt đầu ghi từ dòng 3
-    start_row = 3
-    row_idx = start_row
+    row_idx = 3
 
     target_path = Path(output_dir)
-    # Sắp xếp file theo tên (A-Z) để STT tự tăng một cách logic
     excel_files = sorted([f for f in target_path.iterdir()
                    if f.is_file() and f.suffix in ['.xlsx', '.xls']
                    and not f.name.startswith('~')
@@ -60,8 +54,8 @@ def generate_danhsach(template_danhsach_path: str):
 
     print(f"\n[+] Đã tìm thấy {len(excel_files)} file. Bắt đầu xử lý tự động...\n")
 
-    # Bộ đếm STT tự động (Dùng chung cho cột 1 và tạo Mã sổ gốc)
     stt_sogoc_counter = 1
+    default_kws = ['stt', 'số hiệu bằng', 'họ và tên', 'hội đồng thi', 'nơi sinh', 'giới tính', 'dân tộc']
 
     for file_path in excel_files:
         file_name = file_path.name
@@ -71,55 +65,68 @@ def generate_danhsach(template_danhsach_path: str):
         ten_don_vi = ""
 
         try:
-            # Mở từng file Excel để trích xuất dữ liệu trực tiếp
             wb_school = openpyxl.load_workbook(file_path, data_only=True)
-            ws_school = wb_school.active
+            target_sheet = None
+            start_row = None
 
-            if ws_school is not None:
-                # CỐ ĐỊNH CỘT: Tên trường (N=14), Mã ĐV (AA=27), Tên ĐV (AB=28)
-                COL_TEN_TRUONG = 14
-                COL_MA_DV = 27
-                COL_TEN_DV = 28
+            for sheet_name in wb_school.sheetnames:
+                ws_temp = wb_school[sheet_name]
+                found_row = find_data_start_row(
+                    ws_temp,
+                    config_file="data/tu_khoa_cleaner.txt",
+                    default_keywords=default_kws,
+                    default_start_row=None
+                )
+                if found_row is not None:
+                    target_sheet = ws_temp
+                    start_row = found_row
+                    break
 
-                # Quét từ dòng 2 trở đi, nhặt nhạnh dữ liệu nếu bị thiếu
-                for r in range(2, ws_school.max_row + 1):
-                    val_stt = ws_school.cell(row=r, column=1).value
+            if target_sheet is None or start_row is None:
+                print(f"  [!] BỎ QUA {file_name}: Không tìm thấy sheet dữ liệu chuẩn.")
+                wb_school.close()
+                continue
 
-                    if isinstance(val_stt, (int, float)) or (isinstance(val_stt, str) and val_stt.strip().isdigit()):
+            COL_TEN_TRUONG = 14
+            COL_MA_DV = 27
+            COL_TEN_DV = 28
 
-                        cur_truong = str(ws_school.cell(row=r, column=COL_TEN_TRUONG).value or "").strip()
-                        cur_ma = str(ws_school.cell(row=r, column=COL_MA_DV).value or "").strip()
-                        cur_ten_dv = str(ws_school.cell(row=r, column=COL_TEN_DV).value or "").strip()
+            for r in range(start_row, target_sheet.max_row + 1):
+                val_stt = target_sheet.cell(row=r, column=1).value
 
-                        # Nếu biến đang trống, đắp dữ liệu của dòng hiện tại vào
-                        if not ten_truong_da_hoc and cur_truong and cur_truong.lower() != "none":
-                            ten_truong_da_hoc = cur_truong
+                if isinstance(val_stt, (int, float)) or (isinstance(val_stt, str) and val_stt.strip().isdigit()):
 
-                        if not ma_don_vi and cur_ma and cur_ma.lower() != "none":
-                            ma_don_vi = cur_ma
+                    cur_truong = str(target_sheet.cell(row=r, column=COL_TEN_TRUONG).value or "").strip()
+                    cur_ma = str(target_sheet.cell(row=r, column=COL_MA_DV).value or "").strip()
+                    cur_ten_dv = str(target_sheet.cell(row=r, column=COL_TEN_DV).value or "").strip()
 
-                        if not ten_don_vi and cur_ten_dv and cur_ten_dv.lower() != "none":
-                            ten_don_vi = cur_ten_dv
+                    if not ten_truong_da_hoc and cur_truong and cur_truong.lower() != "none" and not cur_truong.isdigit():
+                        ten_truong_da_hoc = cur_truong
 
-                        # Nếu đã nhặt đủ cả Tên trường và Tên đơn vị thì tự tin thoát vòng lặp
-                        # (Mã đơn vị không bắt buộc vì có trường không có mã)
-                        if ten_truong_da_hoc and ten_don_vi:
-                            break
+                    if not ma_don_vi and cur_ma and cur_ma.lower() != "none":
+                        ma_don_vi = cur_ma
+
+                    if not ten_don_vi and cur_ten_dv and cur_ten_dv.lower() != "none" and not cur_ten_dv.isdigit():
+                        ten_don_vi = cur_ten_dv
+
+                    if ten_truong_da_hoc and ten_don_vi:
+                        break
 
             wb_school.close()
 
         except Exception as e:  # noqa: BLE001
             print(f"  [!] Lỗi đọc dữ liệu từ file {file_name}: {e}")
+            continue
 
-        # Fallback (dự phòng): Dù đã rà đến dòng cuối cùng mà vẫn thiếu thì đắp bằng tên file
-        if not ten_truong_da_hoc or ten_truong_da_hoc.lower() == "none":
+        if not ten_truong_da_hoc or ten_truong_da_hoc.lower() == "none" or ten_truong_da_hoc.isdigit():
             ten_truong_da_hoc = file_name.rsplit('_', 1)[0].strip()
-        if not ten_don_vi or ten_don_vi.lower() == "none":
+
+        if not ten_don_vi or ten_don_vi.lower() == "none" or ten_don_vi.isdigit():
             ten_don_vi = ten_truong_da_hoc
+
         if ma_don_vi.lower() == "none":
             ma_don_vi = ""
 
-        # Format STT sổ gốc thành 01, 02...
         stt_so_str = f"{stt_sogoc_counter:02d}"
         ma_so_goc = f"{nam_chung}_VP_{stt_so_str}"
         ten_tai_lieu = f"Sổ gốc văn bằng năm {nam_chung} - {ten_truong_da_hoc}"
@@ -148,5 +155,5 @@ def generate_danhsach(template_danhsach_path: str):
     wb.save(output_danhsach)
 
     print("\n" + "="*60)
-    print(f"[=] HOÀN TẤT! Đã tổng hợp xong {len(excel_files)} trường.")
+    print(f"[=] HOÀN TẤT! Đã tổng hợp xong {stt_sogoc_counter - 1} trường.")
     print(f"[=] File danh sách được lưu tại: {output_danhsach}")
