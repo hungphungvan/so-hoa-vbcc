@@ -5,7 +5,6 @@ from features.data_cleaner import run_data_cleaner
 from features.excel_splitter import run_excel_splitter
 from features.ocr_processor import run_ocr_feature
 from features.sheet_merger import run_sheet_merger
-from features.sheet_renamer import run_sheet_renamer
 from utils import select_file, select_folder
 
 
@@ -16,16 +15,15 @@ def show_menu():
     print("1. Chạy OCR trích xuất ảnh sổ sang Excel")
     print("2. Tách trường từ file Excel")
     print("3. Tạo danh sách tài liệu số hóa")
-    print("4. Đồng loạt đổi tên Sheet thành 'Data'")
-    print("5. Dọn dẹp dữ liệu thừa & Chuẩn hóa STT")
-    print("6. Gộp nhiều sheet thành 1 sheet duy nhất")
+    print("4. Chuẩn hoá dữ liệu để đưa lên hệ thống")
+    print("5. Gộp nhiều sheet thành 1 sheet duy nhất")
     print("0. Thoát")
     print("="*40)
 
 def main():
     while True:
         show_menu()
-        choice = input("Nhập lựa chọn của bạn (0-6): ").strip()
+        choice = input("Nhập lựa chọn của bạn (0-5): ").strip()
 
         if choice == "1":
             print("\nVui lòng chọn thư mục chứa ảnh...")
@@ -68,12 +66,9 @@ def main():
             generate_danhsach(str(template_danhsach_path))
 
         elif choice == "4":
-            run_sheet_renamer()
-
-        elif choice == "5":
             run_data_cleaner()
 
-        elif choice == "6":
+        elif choice == "5":
             run_sheet_merger()
 
         elif choice == "0":
