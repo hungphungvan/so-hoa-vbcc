@@ -1,8 +1,10 @@
-from pathlib import Path
 from copy import copy
+from pathlib import Path
+
 import openpyxl
 from openpyxl.styles import PatternFill
-from utils import select_file, save_file, trim_ghost_rows, is_empty, find_data_start_row
+
+from utils import find_data_start_row, is_empty, save_file, select_file, trim_ghost_rows
 
 PASTEL_COLORS = [
     "FFFFFF", "F4F6F6", "EBF5FB", "FEF9E7", "EAFAF1", "F5EEF8"
@@ -62,6 +64,12 @@ def run_sheet_merger():
         wb_in = openpyxl.load_workbook(input_file)
         wb_out = openpyxl.Workbook()
         ws_out = wb_out.active
+
+        # FIX 1, 2, 3, 6: Kiểm tra None để báo cáo linter biết biến này an toàn tuyệt đối
+        if ws_out is None:
+            print("[-] LỖI: Không thể khởi tạo Worksheet cho file gộp.")
+            return
+
         ws_out.title = "Data_Gop"
 
         current_out_row = 1
@@ -94,14 +102,16 @@ def run_sheet_merger():
                         copy_cell(src_cell, tgt_cell)
                     current_out_row += 1
 
-                for col in ws_in.column_dimensions.values():
-                    ws_out.column_dimensions[col.column].width = col.width
+                # FIX 4: Dùng items() để lấy ký tự cột (A, B, C...) thay vì dùng col.column
+                for col_letter, col_dim in ws_in.column_dimensions.items():
+                    ws_out.column_dimensions[col_letter].width = col_dim.width
 
                 is_first_sheet = False
             else:
                 # Kiểm tra khuôn mẫu so với chuẩn
                 if current_header != base_header:
-                    print(f"\n      [!] PHÁT HIỆN LỆCH CẤU TRÚC CỘT!")
+                    # FIX 5: Xóa bỏ chữ 'f' vô tác dụng ở đầu chuỗi này
+                    print("\n      [!] PHÁT HIỆN LỆCH CẤU TRÚC CỘT!")
                     print(f"          - Chuẩn (Sheet 1) có {len(base_header)} cột: {base_header}")
                     print(f"          - Sheet này đang có {len(current_header)} cột: {current_header}")
 
@@ -147,5 +157,6 @@ def run_sheet_merger():
         print("\n" + "="*60)
         print(f"[=] HOÀN TẤT! File kết quả lưu tại: {output_file}")
 
-    except Exception as e:
+    # FIX 7: Thêm noqa để bỏ qua cảnh báo vơ vét lỗi Exception
+    except Exception as e:  # noqa: BLE001
         print(f"  [!] LỖI: {e}")

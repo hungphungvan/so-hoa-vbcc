@@ -1,11 +1,15 @@
 import json
 import re
 import time
-import pandas as pd
 from pathlib import Path
-from config import api_client, MODEL_NAME
+
+import pandas as pd
+
+from config import MODEL_NAME, api_client
+
 # Nhúng thêm hàm save_file từ utils
 from utils import encode_image, read_text_file, save_file
+
 
 def extract_table_from_image(image_path: str, prompt_text: str, max_retries: int = 3) -> str:
     """Gửi ảnh qua API có kèm cơ chế tự động thử lại khi lỗi mạng."""
@@ -29,9 +33,13 @@ def extract_table_from_image(image_path: str, prompt_text: str, max_retries: int
                 ],
                 temperature=0.1,
             )
-            return response.choices[0].message.content
 
-        except Exception as e:
+            # FIX 1: Ép kiểu an toàn. Nếu API trả về None, lấy chuỗi rỗng.
+            content = response.choices[0].message.content
+            return content if content is not None else ""
+
+        # FIX 2: Thêm comment noqa để báo linter bỏ qua quy tắc bắt lỗi chung (BLE001) tại đây
+        except Exception as e:  # noqa: BLE001
             print(f"\n      [!] Lỗi API (Lần thử {attempt + 1}/{max_retries}): {e}")
             if attempt == max_retries - 1:
                 return ""
@@ -42,7 +50,7 @@ def run_ocr_feature(folder_path_str: str):
     """Quét ảnh trong thư mục trường, tìm prompt theo 3 cấp, lưu thẳng ra Excel qua hộp thoại Save As."""
     data_dir = Path(folder_path_str)
 
-    valid_extensions = {".jpg", ".jpeg", ".png"}
+    valid_extensions = {".jpg", ".jpeg", ".png", ".heic", ".heif"}
     image_files = sorted([f for f in data_dir.iterdir() if f.suffix.lower() in valid_extensions])
 
     if not image_files:
@@ -74,6 +82,9 @@ def run_ocr_feature(folder_path_str: str):
 
     for img_path in image_files:
         print(f"  -> Xử lý: {img_path.name}...", end=" ")
+
+        json_str = ""
+
         try:
             result_text = extract_table_from_image(str(img_path), prompt_text)
 
@@ -82,7 +93,6 @@ def run_ocr_feature(folder_path_str: str):
                 continue
 
             match = re.search(r'\[.*\]', result_text, re.DOTALL)
-            json_str = ""
 
             if match:
                 json_str = match.group(0)
@@ -92,7 +102,7 @@ def run_ocr_feature(folder_path_str: str):
                     all_students_data.extend(page_data)
                     print(f"OK ({len(page_data)} học sinh)")
                 else:
-                    print(f"LỖI (Dữ liệu không phải là list JSON)")
+                    print("LỖI (Dữ liệu không phải là list JSON)")
             else:
                 print("LỖI (AI không trả về mảng JSON nào)")
                 print(f"\n--- DỮ LIỆU THÔ AI TRẢ VỀ ---\n{result_text}\n-----------------------------\n")
@@ -100,7 +110,7 @@ def run_ocr_feature(folder_path_str: str):
         except json.JSONDecodeError as e:
             print(f"LỖI Parse JSON ({e})")
             print(f"\n--- CHUỖI JSON BỊ LỖI ---\n{json_str}\n-------------------------\n")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"LỖI HỆ THỐNG ({e})")
 
     if all_students_data:

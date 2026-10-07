@@ -1,7 +1,9 @@
-import os
 from pathlib import Path
+
 import openpyxl
+
 from utils import select_folder
+
 
 def run_sheet_renamer():
     print("\n" + "="*60)
@@ -32,6 +34,11 @@ def run_sheet_renamer():
             # Lấy sheet đầu tiên đang active
             sheet = wb.active
 
+            # FIX 1: Linter bắt buộc phải kiểm tra None trước khi gọi thuộc tính
+            if sheet is None:
+                print(f"  [!] {file_path.name}: File không có sheet nào hợp lệ.")
+                continue
+
             if sheet.title != "Data":
                 old_name = sheet.title
                 sheet.title = "Data"
@@ -40,7 +47,9 @@ def run_sheet_renamer():
                 count += 1
             else:
                 print(f"  -> {file_path.name}: Đã là 'Data', bỏ qua.")
-        except Exception as e:
+
+        # FIX 2: Cắm cờ báo cho linter biết mình cố tình bắt lỗi để không sập vòng lặp
+        except Exception as e:  # noqa: BLE001
             print(f"  [!] LỖI khi xử lý {file_path.name}: {e}")
 
     print("\n" + "="*60)

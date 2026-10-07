@@ -1,12 +1,34 @@
 import base64
+import io
+import json
 import tkinter as tk
-from tkinter import filedialog
 from pathlib import Path
+from tkinter import filedialog
+
+from PIL import Image
+from pillow_heif import register_heif_opener
+
+# Đăng ký bộ đọc HEIC cho hệ thống (chỉ cần gọi 1 lần khi import utils)
+register_heif_opener()
 
 def encode_image(image_path: str) -> str:
-    """Đọc và mã hóa file ảnh sang base64 string."""
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+    """Đọc ảnh (tự động convert HEIC sang JPEG trong RAM) và chuyển sang base64."""
+    path = Path(image_path)
+
+    # Nếu là file HEIC/HEIF từ iPhone
+    if path.suffix.lower() in [".heic", ".heif"]:
+        img = Image.open(path)
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG")
+        return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    # Nếu là ảnh bình thường thì đọc trực tiếp
+    else:
+        with open(path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
 
 def read_text_file(file_path: Path) -> str:
     """Đọc nội dung text từ file."""
@@ -22,7 +44,7 @@ def select_folder(title: str = "Chọn thư mục") -> str:
     root.destroy()
     return folder
 
-def select_file(title: str = "Chọn file", filetypes: list = None) -> str:
+def select_file(title: str = "Chọn file", filetypes: list | None = None) -> str:
     """Mở hộp thoại chọn file cụ thể bằng Tkinter."""
     if filetypes is None:
         filetypes = [("Excel files", "*.xlsx *.xls")]
@@ -42,13 +64,15 @@ def load_history(history_file: str) -> dict:
     try:
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            # Kiểm tra tương thích phiên bản
-            for k, v in data.items():
+            # FIX 1: Chỉ lặp qua values() vì không cần dùng đến key
+            for v in data.values():
                 if not isinstance(v, dict):
                     print("[!] Cấu trúc lịch sử cũ không tương thích. Hệ thống sẽ học lại từ đầu...")
                     return {}
             return data
-    except Exception:
+
+    # FIX 2: Thêm cờ noqa để linter không phàn nàn việc bắt mọi lỗi
+    except Exception:  # noqa: BLE001
         return {}
 
 def save_history(data: dict, history_file: str):
@@ -56,7 +80,7 @@ def save_history(data: dict, history_file: str):
     with open(history_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list = None) -> str:
+def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list | None = None) -> str:
     """Mở hộp thoại Lưu file (Save As) bằng Tkinter."""
     if filetypes is None:
         filetypes = [("Excel files", "*.xlsx"), ("All files", "*.*")]
@@ -75,11 +99,7 @@ def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list 
 
 def is_empty(val) -> bool:
     """Kiểm tra xem một ô có trống không (chấp nhận STT không phải là số)."""
-    if val is None:
-        return True
-    if str(val).strip() == "":
-        return True
-    return False
+    return val is None or str(val).strip() == ""
 
 def trim_ghost_rows(ws) -> int:
     """Tìm và chặt bỏ toàn bộ các dòng rác (trống hoàn toàn) ở cuối bảng tính."""
@@ -115,9 +135,12 @@ def get_header_keywords(config_file, default_keywords) -> list:
                 file_kws = [line.strip().lower() for line in f if line.strip()]
                 if file_kws:
                     return file_kws
-        except Exception:
-            pass
-    return default_keywords # Trả về mặc định nếu file không tồn tại
+        # Bắt đúng 2 lỗi liên quan đến file để linter không chê là "bắt mù" (blind)
+        except (OSError, UnicodeDecodeError) as e:
+            # In ra màn hình cảnh báo thay vì dùng chữ "pass" lờ đi
+            print(f"[!] Lỗi đọc file {config_file}: {e}. Sẽ dùng từ khóa mặc định.")
+
+    return default_keywords
 
 def find_data_start_row(ws, max_scan=15, config_file="data/tu_khoa_nhan_dien.txt", default_keywords=None) -> int:
     """
