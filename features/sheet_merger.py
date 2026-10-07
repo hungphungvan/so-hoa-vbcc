@@ -23,7 +23,7 @@ def copy_cell(source_cell, target_cell, fill_override=None):
     elif source_cell.has_style and source_cell.fill:
         target_cell.fill = copy(source_cell.fill)
 
-def extract_header(ws, header_row) -> list:
+def extract_header(ws, header_row: int) -> list:
     """Rút trích dòng tiêu đề của bảng, loại bỏ các ô trống ở cuối để so sánh chuẩn xác."""
     if header_row < 1:
         return []
@@ -31,10 +31,8 @@ def extract_header(ws, header_row) -> list:
     header = []
     for c in range(1, ws.max_column + 1):
         val = ws.cell(row=header_row, column=c).value
-        # Đưa về chữ thường và xóa khoảng trắng thừa để so sánh không bị lỗi lặt vặt
         header.append(str(val).strip().lower() if val is not None else "")
 
-    # Cắt tỉa phần đuôi rỗng (nếu Excel nhận nhầm max_column to hơn thực tế)
     while header and header[-1] == "":
         header.pop()
 
@@ -65,7 +63,6 @@ def run_sheet_merger():
         wb_out = openpyxl.Workbook()
         ws_out = wb_out.active
 
-        # FIX 1, 2, 3, 6: Kiểm tra None để báo cáo linter biết biến này an toàn tuyệt đối
         if ws_out is None:
             print("[-] LỖI: Không thể khởi tạo Worksheet cho file gộp.")
             return
@@ -74,27 +71,38 @@ def run_sheet_merger():
 
         current_out_row = 1
         is_first_sheet = True
-        base_header = []  # Biến lưu trữ khuôn mẫu của sheet 1
+        base_header = []
 
-        for sheet_idx, sheet_name in enumerate(wb_in.sheetnames):
+        default_kws = ['stt', 'số hiệu bằng', 'họ và tên', 'hội đồng thi', 'nơi sinh', 'giới tính', 'dân tộc']
+        valid_sheet_count = 0
+
+        # Đã xóa enumerate và sheet_idx dư thừa
+        for sheet_name in wb_in.sheetnames:
             ws_in = wb_in[sheet_name]
             print(f"  -> Đang đọc sheet: '{sheet_name}'...", end="")
 
-            trim_ghost_rows(ws_in)
-            start_row = find_data_start_row(ws_in)
-            header_row = start_row - 1
+            start_row = find_data_start_row(
+                ws_in,
+                config_file="data/tu_khoa_cleaner.txt",
+                default_keywords=default_kws,
+                default_start_row=None
+            )
 
-            # Lấy khuôn mẫu của sheet hiện tại
+            if start_row is None:
+                print(" (Bỏ qua: Không phải sheet dữ liệu chuẩn)")
+                continue
+
+            trim_ghost_rows(ws_in)
+            header_row = start_row - 1
             current_header = extract_header(ws_in, header_row)
 
-            color_hex = PASTEL_COLORS[sheet_idx % len(PASTEL_COLORS)]
+            color_hex = PASTEL_COLORS[valid_sheet_count % len(PASTEL_COLORS)]
             sheet_fill = PatternFill(start_color=color_hex, end_color=color_hex, fill_type="solid")
 
             if is_first_sheet:
                 base_header = current_header
                 print(" (Đã lấy làm chuẩn khuôn mẫu)")
 
-                # Copy toàn bộ phần đầu
                 for r in range(1, start_row):
                     for c in range(1, ws_in.max_column + 1):
                         src_cell = ws_in.cell(row=r, column=c)
@@ -102,15 +110,12 @@ def run_sheet_merger():
                         copy_cell(src_cell, tgt_cell)
                     current_out_row += 1
 
-                # FIX 4: Dùng items() để lấy ký tự cột (A, B, C...) thay vì dùng col.column
                 for col_letter, col_dim in ws_in.column_dimensions.items():
                     ws_out.column_dimensions[col_letter].width = col_dim.width
 
                 is_first_sheet = False
             else:
-                # Kiểm tra khuôn mẫu so với chuẩn
                 if current_header != base_header:
-                    # FIX 5: Xóa bỏ chữ 'f' vô tác dụng ở đầu chuỗi này
                     print("\n      [!] PHÁT HIỆN LỆCH CẤU TRÚC CỘT!")
                     print(f"          - Chuẩn (Sheet 1) có {len(base_header)} cột: {base_header}")
                     print(f"          - Sheet này đang có {len(current_header)} cột: {current_header}")
@@ -137,10 +142,9 @@ def run_sheet_merger():
                 else:
                     print(" (Khuôn mẫu khớp 100%)")
 
-            # Chép dữ liệu (Nếu không bị Bỏ qua)
             data_count = 0
             for r in range(start_row, ws_in.max_row + 1):
-                if all(is_empty(ws_in.cell(row=r, column=c).value) for c in range(1, 20)):
+                if all(is_empty(ws_in.cell(row=r, column=c).value) for c in range(1, 31)):
                     continue
 
                 for c in range(1, ws_in.max_column + 1):
@@ -151,12 +155,13 @@ def run_sheet_merger():
                 current_out_row += 1
                 data_count += 1
 
+            valid_sheet_count += 1
             print(f"     + Đã nối {data_count} dòng dữ liệu.")
 
         wb_out.save(output_file)
         print("\n" + "="*60)
-        print(f"[=] HOÀN TẤT! File kết quả lưu tại: {output_file}")
+        print(f"[=] HOÀN TẤT! Đã gộp thành công {valid_sheet_count} sheet hợp lệ.")
+        print(f"[=] File kết quả lưu tại: {output_file}")
 
-    # FIX 7: Thêm noqa để bỏ qua cảnh báo vơ vét lỗi Exception
     except Exception as e:  # noqa: BLE001
-        print(f"  [!] LỖI: {e}")
+        print(f"  [!] LỖI TỔNG THỂ: {e}")
