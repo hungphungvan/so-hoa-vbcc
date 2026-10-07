@@ -1,6 +1,8 @@
 import base64
 import io
 import json
+import platform
+import subprocess
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
@@ -36,25 +38,73 @@ def read_text_file(file_path: Path) -> str:
         return file.read().strip()
 
 def select_folder(title: str = "Chọn thư mục") -> str:
-    """Mở hộp thoại chọn thư mục bằng Tkinter."""
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    folder = filedialog.askdirectory(title=title)
-    root.destroy()
-    return folder
+    """Mở hộp thoại chọn thư mục (Hỗ trợ Native macOS, ép focus)."""
+    if platform.system() == "Darwin":
+        script = f"""
+        tell application (path to frontmost application as text)
+            activate
+            set f to choose folder with prompt "{title}"
+        end tell
+        return POSIX path of f
+        """
+        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        return result.stdout.strip() if result.returncode == 0 else ""
+    else:
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        folder = filedialog.askdirectory(title=title)
+        root.destroy()
+        return folder
 
 def select_file(title: str = "Chọn file", filetypes: list | None = None) -> str:
-    """Mở hộp thoại chọn file cụ thể bằng Tkinter."""
-    if filetypes is None:
-        filetypes = [("Excel files", "*.xlsx *.xls")]
+    """Mở hộp thoại chọn file cụ thể (Hỗ trợ Native macOS, ép focus)."""
+    if platform.system() == "Darwin":
+        script = f"""
+        tell application (path to frontmost application as text)
+            activate
+            set f to choose file with prompt "{title}"
+        end tell
+        return POSIX path of f
+        """
+        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        return result.stdout.strip() if result.returncode == 0 else ""
+    else:
+        if filetypes is None:
+            filetypes = [("Excel files", "*.xlsx *.xls")]
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        file_path = filedialog.askopenfilename(title=title, filetypes=filetypes)
+        root.destroy()
+        return file_path
 
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True) # Ép cửa sổ luôn nổi lên trên cùng
-    file_path = filedialog.askopenfilename(title=title, filetypes=filetypes)
-    root.destroy()
-    return file_path
+def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list | None = None) -> str:
+    """Mở hộp thoại Lưu file - Save As (Hỗ trợ Native macOS, ép focus)."""
+    if platform.system() == "Darwin":
+        script = f"""
+        tell application (path to frontmost application as text)
+            activate
+            set f to choose file name with prompt "{title}" default name "{default_name}"
+        end tell
+        return POSIX path of f
+        """
+        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        return result.stdout.strip() if result.returncode == 0 else ""
+    else:
+        if filetypes is None:
+            filetypes = [("Excel files", "*.xlsx"), ("All files", "*.*")]
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        file_path = filedialog.asksaveasfilename(
+            title=title,
+            initialfile=default_name,
+            defaultextension=".xlsx",
+            filetypes=filetypes
+        )
+        root.destroy()
+        return file_path
 
 def load_history(history_file: str) -> dict:
     """Đọc và kiểm tra tính hợp lệ của file lịch sử chuẩn hóa (JSON)"""
@@ -64,14 +114,11 @@ def load_history(history_file: str) -> dict:
     try:
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            # FIX 1: Chỉ lặp qua values() vì không cần dùng đến key
             for v in data.values():
                 if not isinstance(v, dict):
                     print("[!] Cấu trúc lịch sử cũ không tương thích. Hệ thống sẽ học lại từ đầu...")
                     return {}
             return data
-
-    # FIX 2: Thêm cờ noqa để linter không phàn nàn việc bắt mọi lỗi
     except Exception:  # noqa: BLE001
         return {}
 
@@ -79,23 +126,6 @@ def save_history(data: dict, history_file: str):
     """Ghi đè dữ liệu mới vào file lịch sử JSON"""
     with open(history_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-
-def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list | None = None) -> str:
-    """Mở hộp thoại Lưu file (Save As) bằng Tkinter."""
-    if filetypes is None:
-        filetypes = [("Excel files", "*.xlsx"), ("All files", "*.*")]
-
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    file_path = filedialog.asksaveasfilename(
-        title=title,
-        initialfile=default_name,
-        defaultextension=".xlsx",
-        filetypes=filetypes
-    )
-    root.destroy()
-    return file_path
 
 def is_empty(val) -> bool:
     """Kiểm tra xem một ô có trống không (chấp nhận STT không phải là số)."""
@@ -107,7 +137,6 @@ def trim_ghost_rows(ws) -> int:
     max_col = ws.max_column
     real_max = 1
 
-    # Quét từ dưới lên trên để tìm dòng thực sự có chứa dữ liệu
     for r in range(max_row, 0, -1):
         has_data = False
         for c in range(1, max_col + 1):
@@ -135,18 +164,13 @@ def get_header_keywords(config_file, default_keywords) -> list:
                 file_kws = [line.strip().lower() for line in f if line.strip()]
                 if file_kws:
                     return file_kws
-        # Bắt đúng 2 lỗi liên quan đến file để linter không chê là "bắt mù" (blind)
         except (OSError, UnicodeDecodeError) as e:
-            # In ra màn hình cảnh báo thay vì dùng chữ "pass" lờ đi
             print(f"[!] Lỗi đọc file {config_file}: {e}. Sẽ dùng từ khóa mặc định.")
 
     return default_keywords
 
 def find_data_start_row(ws, max_scan=15, config_file="data/tu_khoa_nhan_dien.txt", default_keywords=None) -> int:
-    """
-    Quét các dòng đầu tiên để tự động tìm dòng tiêu đề của bảng dữ liệu.
-    Mỗi module sẽ tự truyền vào config_file và default_keywords của riêng nó.
-    """
+    """Quét các dòng đầu tiên để tự động tìm dòng tiêu đề của bảng dữ liệu."""
     if default_keywords is None:
         default_keywords = ['stt', 'số thứ tự', 'họ và tên', 'tt', 'sbd']
 
