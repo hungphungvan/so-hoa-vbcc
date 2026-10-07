@@ -83,7 +83,7 @@ def run_sheet_merger():
 
             start_row = find_data_start_row(
                 ws_in,
-                config_file="data/tu_khoa_cleaner.txt",
+                config_file="data/tu_khoa_merger.txt",
                 default_keywords=default_kws,
                 default_start_row=None
             )
