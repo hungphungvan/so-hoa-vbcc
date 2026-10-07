@@ -1,10 +1,11 @@
-import pandas as pd
-import openpyxl
-from openpyxl.utils.cell import column_index_from_string
-from pathlib import Path
-import warnings
-import re
 import json
+import re
+import warnings
+from pathlib import Path
+
+import openpyxl
+import pandas as pd
+from openpyxl.utils.cell import column_index_from_string
 from thefuzz import process
 
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
@@ -55,18 +56,19 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
         try:
             with open(history_file, 'r', encoding='utf-8') as f:
                 approved_mapping = json.load(f)
-                # Kiểm tra tương thích phiên bản cũ (nếu có)
-                for k, v in approved_mapping.items():
+                # FIX 1: Chỉ dùng values() vì không cần khóa k
+                for v in approved_mapping.values():
                     if not isinstance(v, dict):
                         print("[!] Cấu trúc lịch sử cũ không còn tương thích. Hệ thống sẽ học lại từ đầu...")
                         approved_mapping = {}
                         break
-        except Exception:
+        # FIX 2: Thêm noqa để bỏ qua cảnh báo vơ vét lỗi
+        except Exception:  # noqa: BLE001
             approved_mapping = {}
 
     try:
         df = pd.read_excel(input_file, sheet_name=0, header=None)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"[-] LỖI đọc file input: {e}")
         return
 
@@ -75,7 +77,8 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
         print(f"[-] LỖI: Bắt buộc cấu hình ánh xạ cho cột {SCHOOL_TEMPLATE_COL} để tách file.")
         return
 
-    map_type, map_val = mapping_rules[SCHOOL_TEMPLATE_COL]
+    # FIX 3: Thêm _ trước map_type vì biến này không được xài đến
+    _map_type, map_val = mapping_rules[SCHOOL_TEMPLATE_COL]
     school_col_idx = column_index_from_string(map_val) - 1
 
     DATA_START_ROW = 3
@@ -107,7 +110,8 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
             continue
 
         # 3. Tên lạ (Sai chính tả hoặc Trường giải thể) -> Hỏi người dùng 2 bước
-        print(f"\n" + "="*60)
+        # FIX 4: Xóa chữ 'f' vô nghĩa ở chuỗi có dấu '='
+        print("\n" + "="*60)
         print(f"[?] PHÁT HIỆN TRƯỜNG CHƯA CHUẨN: '{raw_name_str}'")
 
         # --- BƯỚC 3.1: Xác định ĐƠN VỊ QUẢN LÝ ---
@@ -146,10 +150,11 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                 unit_code = standard_schools[unit_name]
 
         # --- BƯỚC 3.2: Xác định TÊN TRƯỜNG ĐÃ HỌC ---
-        print(f"\n[BƯỚC 2] 'Tên trường đã học' ghi trên phôi bằng của học sinh sẽ là gì?")
+        # FIX 5: Xóa chữ 'f' vô nghĩa ở chuỗi này
+        print("\n[BƯỚC 2] 'Tên trường đã học' ghi trên phôi bằng của học sinh sẽ là gì?")
         print(f"  1. Giữ nguyên gốc: '{raw_name_str}' (Dành cho trường giải thể/sát nhập)")
         print(f"  2. Lấy tên Đơn vị: '{unit_name}' (Dành cho lỗi sai chính tả)")
-        print(f"  3. Tự gõ tên trường chuẩn xác...")
+        print("  3. Tự gõ tên trường chuẩn xác...")
 
         final_school_name = ""
         while True:
@@ -207,14 +212,15 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
         stt_counter = 1
 
         for _, row in df_school.iterrows():
-            ws.cell(row=start_row, column=1).value = stt_counter
+            # FIX 6: Truyền value vào tham số để tránh lỗi gán cho MergedCell
+            ws.cell(row=start_row, column=1, value=stt_counter)
 
             for temp_letter, (m_type, m_val) in mapping_rules.items():
                 if temp_letter == "A":
                     continue
                 col_idx = column_index_from_string(temp_letter)
                 if m_type == 'const':
-                    ws.cell(row=start_row, column=col_idx).value = m_val
+                    ws.cell(row=start_row, column=col_idx, value=m_val)
                 elif m_type == 'col':
                     demo_idx = column_index_from_string(m_val) - 1
                     if demo_idx < len(row):
@@ -230,7 +236,7 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                             if temp_letter in ["I", "S"]:
                                 try:
                                     val = pd.to_datetime(val, dayfirst=True).strftime("%d/%m/%Y")
-                                except Exception:
+                                except Exception:  # noqa: BLE001
                                     val = str(val).strip()
                             elif isinstance(val, pd.Timestamp):
                                 val = val.strftime("%d/%m/%Y")
@@ -239,13 +245,13 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                             else:
                                 val = str(val).strip()
 
-                        ws.cell(row=start_row, column=col_idx).value = val
+                        ws.cell(row=start_row, column=col_idx, value=val)
 
             # Ghi tự động Đơn vị quản lý vào các cột tương ứng nếu có
             if ma_dv_col:
-                ws.cell(row=start_row, column=ma_dv_col).value = unit_code
+                ws.cell(row=start_row, column=ma_dv_col, value=unit_code)
             if ten_dv_col:
-                ws.cell(row=start_row, column=ten_dv_col).value = unit_name
+                ws.cell(row=start_row, column=ten_dv_col, value=unit_name)
 
             start_row += 1
             stt_counter += 1

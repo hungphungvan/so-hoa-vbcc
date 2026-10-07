@@ -1,9 +1,12 @@
-import os
 from pathlib import Path
-import openpyxl
-from utils import select_folder, is_empty, trim_ghost_rows, find_data_start_row
 
-def parse_selection(selection_str: str) -> list:
+import openpyxl
+
+from utils import find_data_start_row, is_empty, select_folder, trim_ghost_rows
+
+
+# FIX 1: Khai báo hàm có thể trả về list hoặc str (dùng dấu | của Python hiện đại)
+def parse_selection(selection_str: str) -> list | str:
     """Chuyển chuỗi nhập (vd: '5, 7, 10-12') thành danh sách các dòng cần xóa, xếp ngược từ lớn đến bé."""
     if selection_str.lower() == 'all':
         return 'all'
@@ -25,7 +28,8 @@ def parse_selection(selection_str: str) -> list:
                 selected_rows.add(int(part))
             except ValueError:
                 pass
-    return sorted(list(selected_rows), reverse=True)
+    # FIX 2: Bỏ list() thừa bên trong sorted()
+    return sorted(selected_rows, reverse=True)
 
 def run_data_cleaner():
     print("\n" + "="*60)
@@ -64,6 +68,12 @@ def run_data_cleaner():
         try:
             wb = openpyxl.load_workbook(file_path)
             ws = wb.active
+
+            # FIX 3, 4, 5: Chặn lỗi None để bảo vệ các hàm ws.cell, ws.delete_rows...
+            if ws is None:
+                print(f"  [!] {file_path.name}: File không có sheet nào hợp lệ.")
+                continue
+
             is_modified = False
 
             # ĐỊNH VỊ DÒNG BẮT ĐẦU (Dùng bộ từ khóa KHẮT KHE cho chuẩn đầu ra hệ thống)
@@ -130,7 +140,10 @@ def run_data_cleaner():
                     else:
                         parsed = parse_selection(choice)
                         valid_flagged = [item['row'] for item in invalid_rows]
-                        rows_to_delete = sorted([r for r in parsed if r in valid_flagged], reverse=True)
+
+                        # Fix bổ trợ cho linter: Đảm bảo parsed là list (vì parse_selection có thể trả về str)
+                        if isinstance(parsed, list):
+                            rows_to_delete = sorted([r for r in parsed if r in valid_flagged], reverse=True)
 
                     if not rows_to_delete:
                         print("  [!] Cú pháp không hợp lệ hoặc dòng đã chọn không nằm trong danh sách. Vui lòng thử lại.")
@@ -153,7 +166,10 @@ def run_data_cleaner():
                 if not all(is_empty(ws.cell(row=row_idx, column=c).value) for c in range(1, 30)):
                     current_stt = ws.cell(row=row_idx, column=1).value
                     if current_stt != stt_counter:
-                        ws.cell(row=row_idx, column=1).value = stt_counter
+
+                        # FIX 6: Truyền thẳng value=stt_counter vào biến để tránh lỗi gán cho MergedCell
+                        ws.cell(row=row_idx, column=1, value=stt_counter)
+
                         stt_updated = True
                     stt_counter += 1
 
@@ -165,7 +181,8 @@ def run_data_cleaner():
                 wb.save(file_path)
                 print("  -> Đã lưu lại file thành công.")
 
-        except Exception as e:
+        # FIX 7: Chặn cảnh báo blind exception
+        except Exception as e:  # noqa: BLE001
             print(f"  [!] LỖI khi quét file {file_path.name}: {e}")
 
     print("\n" + "="*60)

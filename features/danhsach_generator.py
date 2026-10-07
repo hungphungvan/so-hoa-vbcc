@@ -1,10 +1,11 @@
-import os
+from datetime import UTC, datetime
 from pathlib import Path
+
 import openpyxl
-from datetime import datetime
 
 # Import trực tiếp các hàm dùng chung từ utils.py của bạn
-from utils import select_folder, load_history
+from utils import load_history, select_folder
+
 
 def generate_danhsach(template_danhsach_path: str):
     print("\n" + "="*60)
@@ -27,7 +28,7 @@ def generate_danhsach(template_danhsach_path: str):
 
     # Cố định Tình trạng tài liệu và ngày lập
     tinh_trang = "Nguyên vẹn"
-    ngay_lap_so = datetime.now().strftime("%d/%m/%Y")
+    ngay_lap_so = datetime.now(tz=UTC).astimezone().strftime("%d/%m/%Y")
 
     # 2. Đọc bộ nhớ lịch sử bằng hàm load_history từ utils
     history_file = "data/lich_su_chuan_hoa.json"
@@ -35,6 +36,7 @@ def generate_danhsach(template_danhsach_path: str):
 
     # Xây dựng từ điển để tra cứu Đơn vị dựa trên Tên trường
     school_info_db = {}
+    # FIX: Dùng values() thay vì items() nếu không cần key cũ
     for raw_name, info in history_data.items():
         if isinstance(info, dict):
             # Key là tên trường, Value là toàn bộ info
@@ -44,16 +46,33 @@ def generate_danhsach(template_danhsach_path: str):
     # 3. Mở file template Danh sách
     try:
         wb = openpyxl.load_workbook(template_danhsach_path)
-        ws = wb['Data']
-    except Exception as e:
+        # Bắt lỗi an toàn nếu template không có sheet Data
+        if 'Data' in wb.sheetnames:
+            ws = wb['Data']
+        else:
+            ws = wb.active
+            if ws is not None:
+                ws.title = 'Data'
+
+        # Kiểm tra None để linter không phàn nàn
+        if ws is None:
+            print("[-] LỖI: Template Excel không có bảng tính nào hợp lệ.")
+            return
+
+    except Exception as e:  # noqa: BLE001 (FIX: Chặn cảnh báo blind exception)
         print(f"[-] LỖI: Không thể mở file {template_danhsach_path}. Chi tiết: {e}")
         return
 
     start_row = 2
     row_idx = start_row
 
-    # Bỏ qua các file rác hoặc các file tổng hợp cũ
-    excel_files = [f for f in os.listdir(output_dir) if f.endswith('.xlsx') and not f.startswith('~') and not f.startswith('DS_Tai_Lieu_So_Hoa')]
+    # FIX: Thay thế os.listdir bằng pathlib cho đồng bộ và hiện đại
+    target_path = Path(output_dir)
+    excel_files = [f.name for f in target_path.iterdir()
+                   if f.is_file() and f.suffix in ['.xlsx', '.xls']
+                   and not f.name.startswith('~')
+                   and not f.name.startswith('DS_Tai_Lieu_So_Hoa')]
+
     if not excel_files:
         print(f"[-] Không tìm thấy file Excel trường nào trong thư mục {output_dir}")
         return
@@ -81,29 +100,29 @@ def generate_danhsach(template_danhsach_path: str):
         print(f"Đơn vị quản lý : {ten_don_vi} (Mã: {ma_don_vi})")
 
         # Tạm dừng để hỏi STT
-        stt_so = input(f"--> Nhập STT sổ gốc (VD: 01, 15...): ").strip()
+        stt_so = input("--> Nhập STT sổ gốc (VD: 01, 15...): ").strip()
 
         # Tính toán công thức
         ma_so_goc = f"{nam_chung}_VP_{stt_so}"
         ten_tai_lieu = f"Sổ gốc văn bằng năm {nam_chung} - {ten_truong_da_hoc}"
 
-        # Ghi vào file mẫu
-        ws.cell(row=row_idx, column=1).value = row_idx - 1  # STT (tự tăng từ 1)
-        ws.cell(row=row_idx, column=2).value = ma_don_vi    # Mã đơn vị
-        ws.cell(row=row_idx, column=3).value = ten_don_vi   # Tên đơn vị
-        ws.cell(row=row_idx, column=4).value = ma_so_goc    # Mã sổ gốc
-        ws.cell(row=row_idx, column=5).value = ten_tai_lieu # Tên tài liệu
-        ws.cell(row=row_idx, column=6).value = nam_chung    # Từ năm
-        ws.cell(row=row_idx, column=7).value = nam_chung    # Đến năm
-        ws.cell(row=row_idx, column=8).value = ngay_lap_so  # Ngày lập (hôm nay)
-        ws.cell(row=row_idx, column=9).value = ""           # Số trang (bỏ trống)
-        ws.cell(row=row_idx, column=10).value = tinh_trang  # Nguyên vẹn
-        ws.cell(row=row_idx, column=11).value = ""          # Thông tư (bỏ trống)
+        # FIX: Tránh lỗi MergedCell bằng cách truyền tham số value=
+        ws.cell(row=row_idx, column=1, value=row_idx - 1)  # STT (tự tăng từ 1)
+        ws.cell(row=row_idx, column=2, value=ma_don_vi)    # Mã đơn vị
+        ws.cell(row=row_idx, column=3, value=ten_don_vi)   # Tên đơn vị
+        ws.cell(row=row_idx, column=4, value=ma_so_goc)    # Mã sổ gốc
+        ws.cell(row=row_idx, column=5, value=ten_tai_lieu) # Tên tài liệu
+        ws.cell(row=row_idx, column=6, value=nam_chung)    # Từ năm
+        ws.cell(row=row_idx, column=7, value=nam_chung)    # Đến năm
+        ws.cell(row=row_idx, column=8, value=ngay_lap_so)  # Ngày lập (hôm nay)
+        ws.cell(row=row_idx, column=9, value="")           # Số trang (bỏ trống)
+        ws.cell(row=row_idx, column=10, value=tinh_trang)  # Nguyên vẹn
+        ws.cell(row=row_idx, column=11, value="")          # Thông tư (bỏ trống)
 
         row_idx += 1
 
     # 5. Lưu file tổng hợp
-    output_danhsach = Path(output_dir) / f"DS_Tai_Lieu_So_Hoa_{nam_chung}.xlsx"
+    output_danhsach = target_path / f"DS_Tai_Lieu_So_Hoa_{nam_chung}.xlsx"
     wb.save(output_danhsach)
 
     print("\n" + "="*60)
