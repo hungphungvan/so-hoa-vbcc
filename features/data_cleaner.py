@@ -84,7 +84,7 @@ def run_data_cleaner():
                 default_keywords=cleaner_keywords
             )
 
-            if start_row != 2:
+            if start_row != 3:
                 print(f"  -> Bảng dữ liệu tự động xác định bắt đầu từ dòng {start_row}.")
 
             # Bước 1: Tự động "cắt tỉa" dòng rác ở cuối file (tái sử dụng từ utils)

@@ -169,7 +169,7 @@ def get_header_keywords(config_file, default_keywords) -> list:
 
     return default_keywords
 
-def find_data_start_row(ws, max_scan=15, config_file="data/tu_khoa_nhan_dien.txt", default_keywords=None) -> int:
+def find_data_start_row(ws, max_scan=15, config_file="data/tu_khoa_nhan_dien.txt", default_keywords=None, default_start_row=3) -> int:
     """Quét các dòng đầu tiên để tự động tìm dòng tiêu đề của bảng dữ liệu."""
     if default_keywords is None:
         default_keywords = ['stt', 'số thứ tự', 'họ và tên', 'tt', 'sbd']
@@ -184,4 +184,4 @@ def find_data_start_row(ws, max_scan=15, config_file="data/tu_khoa_nhan_dien.txt
             if any(kw == val for kw in keywords):
                 return row_idx + 1
 
-    return 2
+    return default_start_row
