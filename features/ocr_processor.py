@@ -7,8 +7,8 @@ import pandas as pd
 
 from config import MODEL_NAME, api_client
 
-# Nhúng thêm hàm save_file từ utils
-from utils import encode_image, read_text_file, save_file
+# Nhúng thêm hàm save_file, natural_sort_key từ utils
+from utils import encode_image, natural_sort_key, read_text_file, save_file
 
 
 def extract_table_from_image(image_path: str, prompt_text: str, max_retries: int = 3) -> str:
@@ -51,7 +51,10 @@ def run_ocr_feature(folder_path_str: str):
     data_dir = Path(folder_path_str)
 
     valid_extensions = {".jpg", ".jpeg", ".png", ".heic", ".heif"}
-    image_files = sorted([f for f in data_dir.iterdir() if f.suffix.lower() in valid_extensions])
+    image_files = sorted(
+        [f for f in data_dir.iterdir() if f.suffix.lower() in valid_extensions],
+        key=natural_sort_key,
+    )
 
     if not image_files:
         print(f"[-] Thư mục '{data_dir.name}' trống hoặc không chứa file ảnh hợp lệ.")

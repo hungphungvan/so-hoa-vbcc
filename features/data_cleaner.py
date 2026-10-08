@@ -4,7 +4,13 @@ from pathlib import Path
 import openpyxl
 from openpyxl.styles import PatternFill
 
-from utils import find_data_start_row, is_empty, select_folder, trim_ghost_rows
+from utils import (
+    find_data_start_row,
+    is_empty,
+    natural_sort_key,
+    select_folder,
+    trim_ghost_rows,
+)
 
 
 def run_data_cleaner():
@@ -20,7 +26,17 @@ def run_data_cleaner():
         return
 
     target_dir = Path(folder_path)
-    excel_files = [f for f in target_dir.iterdir() if f.is_file() and f.suffix in ['.xlsx', '.xls'] and not f.name.startswith('~') and not f.name.startswith('DS_Tai_Lieu_So_Hoa')]
+    excel_files = sorted(
+        [
+            f
+            for f in target_dir.iterdir()
+            if f.is_file()
+            and f.suffix in ['.xlsx', '.xls']
+            and not f.name.startswith('~')
+            and not f.name.startswith('DS_Tai_Lieu_So_Hoa')
+        ],
+        key=natural_sort_key,
+    )
 
     if not excel_files:
         print(f"[-] Không tìm thấy file Excel nào trong thư mục {target_dir.name}")

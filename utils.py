@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import platform
+import re
 import subprocess
 import tkinter as tk
 from pathlib import Path
@@ -12,6 +13,16 @@ from pillow_heif import register_heif_opener
 
 # Đăng ký bộ đọc HEIC cho hệ thống (chỉ cần gọi 1 lần khi import utils)
 register_heif_opener()
+
+def natural_sort_key(file_path: str | Path):
+    """
+    Tách tên file thành các phần chữ và số để sắp xếp tự nhiên (Natural Sort).
+    Đảm bảo thứ tự 1, 2, ..., 9, 10 cũng như 01, 02, ..., 10.
+    """
+    name = Path(file_path).name
+    tokens = [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', name)]
+    return (tokens, name)
+
 
 def encode_image(image_path: str) -> str:
     """Đọc ảnh (tự động convert HEIC sang JPEG trong RAM) và chuyển sang base64."""

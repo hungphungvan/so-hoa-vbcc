@@ -3,7 +3,7 @@ from pathlib import Path
 
 import openpyxl
 
-from utils import find_data_start_row, select_folder
+from utils import find_data_start_row, natural_sort_key, select_folder
 
 
 def generate_danhsach(template_danhsach_path: str):
@@ -43,10 +43,18 @@ def generate_danhsach(template_danhsach_path: str):
     row_idx = 3
 
     target_path = Path(output_dir)
-    excel_files = sorted([f for f in target_path.iterdir()
-                   if f.is_file() and f.suffix in ['.xlsx', '.xls']
-                   and not f.name.startswith('~')
-                   and not f.name.startswith('DS_Tai_Lieu_So_Hoa')])
+    excel_files = sorted(
+        [
+            f
+            for f in target_path.iterdir()
+            if f.is_file()
+            and f.suffix in ['.xlsx', '.xls']
+            and not f.name.startswith('~')
+            and not f.name.startswith('DS_Tai_Lieu_So_Hoa')
+        ],
+        key=natural_sort_key,
+    )
+
 
     if not excel_files:
         print(f"[-] Không tìm thấy file Excel trường nào trong thư mục {output_dir}")
