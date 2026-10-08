@@ -106,6 +106,27 @@ def save_file(title: str = "Lưu file", default_name: str = "", filetypes: list 
         root.destroy()
         return file_path
 
+def open_file_in_os(file_path: str | Path) -> bool:
+    """Mở file bằng ứng dụng mặc định của hệ thống (hỗ trợ macOS, Windows, Linux)."""
+    target = Path(file_path).resolve()
+    if not target.exists():
+        print(f"[-] File không tồn tại: {target}")
+        return False
+
+    try:
+        sys_name = platform.system()
+        if sys_name == "Darwin":
+            subprocess.run(["open", str(target)], check=False)
+        elif sys_name == "Windows":
+            import os
+            os.startfile(str(target))
+        else:
+            subprocess.run(["xdg-open", str(target)], check=False)
+        return True
+    except Exception as e:
+        print(f"[-] Không thể mở file tự động: {e}")
+        return False
+
 def load_history(history_file: str) -> dict:
     """Đọc và kiểm tra tính hợp lệ của file lịch sử chuẩn hóa (JSON)"""
     path = Path(history_file)
