@@ -123,7 +123,7 @@ def open_file_in_os(file_path: str | Path) -> bool:
         else:
             subprocess.run(["xdg-open", str(target)], check=False)
         return True
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"[-] Không thể mở file tự động: {e}")
         return False
 
