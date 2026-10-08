@@ -132,20 +132,48 @@ def is_empty(val) -> bool:
     return val is None or str(val).strip() == ""
 
 def trim_ghost_rows(ws) -> int:
-    """Tìm và chặt bỏ toàn bộ các dòng rác (trống hoàn toàn) ở cuối bảng tính siêu tốc."""
+    """
+    Tìm và chặt bỏ toàn bộ các dòng rác ở cuối bảng tính siêu tốc.
+    Xử lý triệt để bẫy ô rác đơn độc lơ lửng ở đáy trang tính (như kẹt ô ở dòng 1.048.576).
+    """
     if not hasattr(ws, '_cells'):
         return 0
 
-    # Tìm dòng cuối cùng có chứa dữ liệu thực tế
-    real_max = 1
+    # Gom nhóm và đếm số ô có dữ liệu thật trên từng dòng
+    row_counts = {}
     for (r, _), cell in ws._cells.items():
-        if r > real_max and cell.value is not None and str(cell.value).strip() != "":
-            real_max = r
+        if cell.value is not None and str(cell.value).strip() != "":
+            row_counts[r] = row_counts.get(r, 0) + 1
 
+    if not row_counts:
+        return 0
+
+    # Lấy danh sách các dòng có dữ liệu đã sắp xếp tăng dần
+    sorted_rows = sorted(row_counts.keys())
+
+    # Quét ngược từ đáy lên để gọt sạch các ô rác cô lập / lơ lửng ở đáy
+    while sorted_rows:
+        last_row = sorted_rows[-1]
+
+        # Nếu chỉ còn 1 dòng duy nhất thì giữ lại
+        if len(sorted_rows) == 1:
+            break
+
+        prev_row = sorted_rows[-2]
+        gap = last_row - prev_row
+
+        # BẮT BẪY Ô RÁC ĐÁY:
+        # Nếu dòng đáy có ít ô (<= 2 ô) VÀ cách dòng dữ liệu bên trên từ 2 dòng trống trở lên (gap > 2)
+        # -> Đây 100% là ô rác vô tình bị rơi xuống đáy trang tính
+        if row_counts[last_row] <= 2 and gap > 2:
+            sorted_rows.pop()
+        else:
+            break
+
+    real_max = sorted_rows[-1]
     deleted_count = 0
     max_row = ws.max_row
 
-    # Chặt bỏ các dòng rác trống ở cuối bảng tính
     if max_row > real_max:
         deleted_count = max_row - real_max
         ws.delete_rows(real_max + 1, deleted_count)
