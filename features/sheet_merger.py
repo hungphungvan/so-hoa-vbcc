@@ -38,43 +38,12 @@ def extract_header(ws, header_row: int) -> list:
     header = []
     for c in range(1, ws.max_column + 1):
         val = ws.cell(row=header_row, column=c).value
-        clean_val = " ".join(str(val).split()).lower() if val is not None else ""
-        header.append(clean_val)
+        header.append(str(val).strip().lower() if val is not None else "")
 
     while header and header[-1] == "":
         header.pop()
 
     return header
-
-def print_header_diff(base_header: list, current_header: list):
-    """Hiển thị chi tiết sai lệch giữa khuôn mẫu chuẩn và sheet hiện tại."""
-    print("\n      [!] PHÁT HIỆN LỆCH CẤU TRÚC CỘT!")
-    print(f"          - Chuẩn (Sheet 1) có {len(base_header)} cột: {base_header}")
-    print(f"          - Sheet này đang có {len(current_header)} cột: {current_header}")
-
-    base_set = set(base_header)
-    curr_set = set(current_header)
-
-    missing = [c for c in base_header if c not in curr_set]
-    extra = [c for c in current_header if c not in base_set]
-
-    if missing:
-        print(f"          -> Cột THIẾU so với chuẩn: {missing}")
-    if extra:
-        print(f"          -> Cột THỪA so với chuẩn: {extra}")
-
-    diff_positions = []
-    max_len = max(len(base_header), len(current_header))
-    for idx in range(max_len):
-        b_val = base_header[idx] if idx < len(base_header) else "(không có)"
-        c_val = current_header[idx] if idx < len(current_header) else "(không có)"
-        if b_val != c_val:
-            diff_positions.append(f"Cột {idx + 1} [Chuẩn: '{b_val}' != Sheet này: '{c_val}']")
-
-    if diff_positions:
-        displayed = diff_positions[:5]
-        suffix = f" ... (+{len(diff_positions) - 5} cột khác)" if len(diff_positions) > 5 else ""
-        print(f"          -> Vị trí sai lệch: {'; '.join(displayed)}{suffix}")
 
 def run_sheet_merger():
     print("\n" + "="*60)
@@ -161,7 +130,9 @@ def run_sheet_merger():
                     skip_sheet = False
 
                     while current_header != base_header:
-                        print_header_diff(base_header, current_header)
+                        print("\n      [!] PHÁT HIỆN LỆCH CẤU TRÚC CỘT!")
+                        print(f"          - Chuẩn (Sheet 1) có {len(base_header)} cột: {base_header}")
+                        print(f"          - Sheet này đang có {len(current_header)} cột: {current_header}")
 
                         print("\n      Bạn muốn xử lý thế nào?")
                         print("      1. Mở file Excel để sửa -> Lưu file -> Quét lại sheet này")
@@ -231,8 +202,9 @@ def run_sheet_merger():
                                     rescanned_ok = True
                                     break
                                 else:
-                                    print("      [!] Đã quét lại nhưng cấu trúc cột vẫn chưa khớp:")
-                                    print_header_diff(base_header, current_header)
+                                    print("\n      [!] PHÁT HIỆN LỆCH CẤU TRÚC CỘT!")
+                                    print(f"          - Chuẩn (Sheet 1) có {len(base_header)} cột: {base_header}")
+                                    print(f"          - Sheet này đang có {len(current_header)} cột: {current_header}")
 
                             if rescanned_ok:
                                 break
