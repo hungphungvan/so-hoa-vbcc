@@ -168,7 +168,7 @@ def run_sheet_merger():
                                 print(f"      [*] Đang tải lại file và quét sheet '{sheet_name}'...")
                                 try:
                                     wb_in = openpyxl.load_workbook(input_file)
-                                except Exception as e:
+                                except Exception as e:  # noqa: BLE001
                                     print(f"      [!] Lỗi khi đọc file (có thể file đang được Excel ghi/khóa): {e}")
                                     print("          Vui lòng kiểm tra đã lưu file xong trong Excel và thử lại.")
                                     continue
