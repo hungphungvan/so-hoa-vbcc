@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 
 import openpyxl
@@ -29,6 +30,7 @@ def run_data_cleaner():
 
     yellow_fill = PatternFill(start_color="FFFFFF00", end_color="FFFFFF00", fill_type="solid")
     red_fill = PatternFill(start_color="FFFF9999", end_color="FFFF9999", fill_type="solid")
+    orange_fill = PatternFill(start_color="FFFFC000", end_color="FFFFC000", fill_type="solid")
 
     MANDATORY_COLS = {
         "Số hiệu bằng (B)": 2,
@@ -101,9 +103,10 @@ def run_data_cleaner():
                 is_modified = True
                 print(f"  -> Đã gọt sạch {ghost_deleted} 'dòng ma' ở đuôi file.")
 
-            has_issue = False
-            red_rows = 0
-            yellow_cells = 0
+            red_rows = []
+            missing_cells = []
+            so_hieu_map = defaultdict(list)
+            yellow_cells_count = 0
 
             # Lúc này start_row chắc chắn là int, hàm range() sẽ không bị cảnh báo nữa
             for r in range(start_row, target_sheet.max_row + 1):
@@ -113,21 +116,44 @@ def run_data_cleaner():
                 if is_empty(target_sheet.cell(row=r, column=5).value):
                     for c in range(1, 30):
                         target_sheet.cell(row=r, column=c).fill = red_fill
-                    has_issue = True
+                    red_rows.append(r)
                     is_modified = True
-                    red_rows += 1
                 else:
-                    for col_idx in MANDATORY_COLS.values():
+                    row_missing_cols = []
+                    for col_name, col_idx in MANDATORY_COLS.items():
                         cell = target_sheet.cell(row=r, column=col_idx)
                         if is_empty(cell.value):
                             cell.fill = yellow_fill
-                            has_issue = True
+                            row_missing_cols.append(col_name)
+                            yellow_cells_count += 1
                             is_modified = True
-                            yellow_cells += 1
+
+                    if row_missing_cols:
+                        missing_cells.append({"row": r, "cols": row_missing_cols})
+
+                    sh_cell_val = target_sheet.cell(row=r, column=2).value
+                    if not is_empty(sh_cell_val):
+                        sh_str = str(sh_cell_val).strip()
+                        so_hieu_map[sh_str].append(r)
+
+            duplicate_so_hieu = {}
+            for sh_str, rows in so_hieu_map.items():
+                if len(rows) > 1:
+                    duplicate_so_hieu[sh_str] = rows
+                    is_modified = True
+                    for r in rows:
+                        target_sheet.cell(row=r, column=2).fill = orange_fill
+
+            has_issue = bool(red_rows or missing_cells or duplicate_so_hieu)
 
             if has_issue:
-                files_with_issues.append(file_path.name)
-                print(f"  [!] PHÁT HIỆN LỖI: {red_rows} dòng rác (Tô đỏ) | {yellow_cells} ô thiếu (Tô vàng).")
+                files_with_issues.append({
+                    "file_name": file_path.name,
+                    "red_rows": red_rows,
+                    "missing_cells": missing_cells,
+                    "duplicates": duplicate_so_hieu
+                })
+                print(f"  [!] PHÁT HIỆN LỖI: {len(red_rows)} dòng rác (Đỏ) | {yellow_cells_count} ô thiếu (Vàng) | {len(duplicate_so_hieu)} mã trùng Số hiệu bằng (Cam).")
             else:
                 print("  -> OK: Dữ liệu hoàn hảo, không có lỗi.")
 
@@ -142,13 +168,33 @@ def run_data_cleaner():
     print(f"[=] HOÀN TẤT CHUẨN HOÁ ({count_processed}/{len(excel_files)} file)!")
 
     if files_with_issues:
-        print("\n" + "!"*60)
-        print(" [BẢNG PHONG THẦN - CÁC FILE CẦN BẠN MỞ RA SỬA TAY]")
-        print(" -> Dòng bôi ĐỎ NHẠT : Kéo chọn và ấn Delete (do nhập rác).")
+        print("\n" + "!"*70)
+        print(" [BẢNG PHONG THẦN - CHI TIẾT CÁC FILE & DÒNG/CỘT CẦN SỬA TAY]")
+        print(" -> Dòng bôi ĐỎ NHẠT : Kéo chọn và ấn Delete (dòng rác thiếu họ tên).")
         print(" -> Ô bôi VÀNG      : Bổ sung dữ liệu còn thiếu.")
+        print(" -> Ô bôi CAM       : Trùng lặp 'Số hiệu bằng' (Cột B) giữa các dòng.")
         print(" -> Cột STT (A)     : Kéo chuột đánh lại sau khi xóa dòng đỏ.")
-        for f in files_with_issues:
-            print(f"  - {f}")
-        print("!"*60)
+        print("!"*70)
+
+        for issue in files_with_issues:
+            print(f"\n📁 File: {issue['file_name']}")
+
+            if issue["red_rows"]:
+                rows_str = ", ".join(map(str, issue["red_rows"]))
+                print(f"   ❌ DÒNG RÁC (Thiếu Họ Tên - Tô đỏ): Dòng {rows_str}")
+
+            if issue["duplicates"]:
+                print("   ⚠️  TRÙNG LẶP SỐ HIỆU BẰNG (Cột B - Tô cam):")
+                for sh, rows in issue["duplicates"].items():
+                    rows_str = ", ".join(f"Dòng {r}" for r in rows)
+                    print(f"      + Số hiệu '{sh}': xuất hiện ở {rows_str}")
+
+            if issue["missing_cells"]:
+                print("   ⚠️  DỮ LIỆU CÒN THIẾU (Tô vàng):")
+                for item in issue["missing_cells"]:
+                    cols_str = ", ".join(item["cols"])
+                    print(f"      + Dòng {item['row']}: Thiếu [{cols_str}]")
+
+        print("\n" + "!"*70)
     else:
         print("\n[+] Tuyệt vời! Toàn bộ file đều hoàn hảo 100%, sẵn sàng up hệ thống.")
