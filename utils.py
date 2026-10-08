@@ -4,7 +4,6 @@ import json
 import platform
 import subprocess
 import tkinter as tk
-from collections import defaultdict
 from pathlib import Path
 from tkinter import filedialog
 
@@ -133,27 +132,20 @@ def is_empty(val) -> bool:
     return val is None or str(val).strip() == ""
 
 def trim_ghost_rows(ws) -> int:
-    """Tìm và chặt bỏ toàn bộ các dòng rác ở cuối bảng tính siêu tốc (bỏ qua rác 1 ô ở đáy)."""
+    """Tìm và chặt bỏ toàn bộ các dòng rác (trống hoàn toàn) ở cuối bảng tính siêu tốc."""
     if not hasattr(ws, '_cells'):
         return 0
 
-    # Gom nhóm và đếm số lượng ô có dữ liệu theo từng dòng
-    row_counts = defaultdict(int)
-    for (r, c), cell in ws._cells.items():
-        if cell.value is not None and str(cell.value).strip() != "":
-            row_counts[r] += 1
-
-    # Tìm dòng cuối cùng CÓ ÍT NHẤT 2 Ô DỮ LIỆU (lọc bỏ rác lơ lửng 1 ô)
+    # Tìm dòng cuối cùng có chứa dữ liệu thực tế
     real_max = 1
-    for r, count in row_counts.items():
-        # Đã gộp 2 lệnh if bằng chữ 'and' để fix lỗi linter
-        if count >= 2 and r > real_max:
+    for (r, _), cell in ws._cells.items():
+        if r > real_max and cell.value is not None and str(cell.value).strip() != "":
             real_max = r
 
     deleted_count = 0
     max_row = ws.max_row
 
-    # Chặt bỏ không thương tiếc hàng triệu dòng rác bên dưới
+    # Chặt bỏ các dòng rác trống ở cuối bảng tính
     if max_row > real_max:
         deleted_count = max_row - real_max
         ws.delete_rows(real_max + 1, deleted_count)
