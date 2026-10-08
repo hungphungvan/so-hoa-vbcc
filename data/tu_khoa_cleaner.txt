@@ -1,0 +1,19 @@
+stt
+số hiệu bằng
+số vào sổ gốc cấp văn bằng
+tên văn bằng
+họ, chữ đệm và tên
+mã người học
+số định danh cá nhân
+hộ chiếu
+ngày, tháng, năm sinh
+giới tính
+dân tộc
+quốc tịch
+nơi sinh
+tên trường đã học
+niên khóa
+hội đồng thi
+trạng thái số hóa
+mã đơn vị
+tên đơn vị
