@@ -1,8 +1,15 @@
-stt
 tt
-số thứ tự
+stt
+sbd
 họ và tên
 họ tên
-sbd
-số báo danh
+họ và tên thí sinh
+ngày sinh
+giới tính
+dân tộc
+nơi sinh
+trường 12
+học sinh trường
+hội đồng thi
 số hiệu bằng
+ghi chú
