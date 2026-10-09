@@ -1,4 +1,3 @@
-import json
 import re
 import warnings
 from pathlib import Path
@@ -6,7 +5,7 @@ from pathlib import Path
 import openpyxl
 import pandas as pd
 from openpyxl.utils.cell import column_index_from_string, get_column_letter
-from thefuzz import fuzz, process
+from thefuzz import fuzz
 
 # Nhập hàm dò tìm thông minh từ utils
 from utils import find_data_start_row
@@ -380,17 +379,6 @@ def review_and_confirm_mapping(
 
         else:
             print(" [!] Lựa chọn không hợp lệ, vui lòng thử lại.")
-
-def load_school_catalog(csv_file: str) -> dict:
-    catalog = {}
-    with open(csv_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line or ';' not in line or line.startswith('ma_truong'):
-                continue
-            ma_truong, ten_truong = line.split(';', 1)
-            catalog[ten_truong.strip()] = ma_truong.strip()
-    return catalog
 
 def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, output_dir: str):
     # 1. KIỂM TRA TÍNH HỢP LỆ CỦA FILE TEMPLATE TRƯỚC KHI CHẠY
