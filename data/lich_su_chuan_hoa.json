@@ -168,5 +168,60 @@
         "ten_truong": "THPT Tam Đảo",
         "ten_don_vi": "THPT Tam Đảo",
         "ma_don_vi": "268"
+    },
+    "DL Châu Phong": {
+        "ten_truong": "DL Châu Phong",
+        "ten_don_vi": "Sở GD&ĐT Phú Thọ",
+        "ma_don_vi": "025"
+    },
+    "Trần Nguyên Hãn": {
+        "ten_truong": "PTTH Trần Nguyên Hãn",
+        "ten_don_vi": "THPT Trần Nguyên Hãn",
+        "ma_don_vi": "280"
+    },
+    "Nguyễn Viết Xuấn": {
+        "ten_truong": "PTTH Nguyễn Viết Xuân",
+        "ten_don_vi": "THPT Nguyễn Viết Xuân",
+        "ma_don_vi": "253"
+    },
+    "DTNT Tỉnh": {
+        "ten_truong": "DTNT Tỉnh",
+        "ten_don_vi": "THPT Kim Ngọc",
+        "ma_don_vi": "226"
+    },
+    "DL Vĩnh Yên": {
+        "ten_truong": "DL Vĩnh Yên",
+        "ten_don_vi": "THPT Liên Bảo",
+        "ma_don_vi": "408"
+    },
+    "BC Phúc Yên": {
+        "ten_truong": "BC Phúc Yên",
+        "ten_don_vi": "THPT Hai Bà Trưng",
+        "ma_don_vi": "220"
+    },
+    "Hai Bà Trưng": {
+        "ten_truong": "PTTH Hai Bà Trưng",
+        "ten_don_vi": "THPT Hai Bà Trưng",
+        "ma_don_vi": "220"
+    },
+    "Đại Thịnh": {
+        "ten_truong": "PTTH Đại Thịnh",
+        "ten_don_vi": "THPT Đại Đồng",
+        "ma_don_vi": "214"
+    },
+    "BC Mê Linh": {
+        "ten_truong": "BC Mê Linh",
+        "ten_don_vi": "Sở GD&ĐT Phú Thọ",
+        "ma_don_vi": "025"
+    },
+    "Tam Đảo - Vĩnh Phú": {
+        "ten_truong": "PTTH Tam Đảo",
+        "ten_don_vi": "THPT Tam Đảo",
+        "ma_don_vi": "268"
+    },
+    "BC Trần Phú": {
+        "ten_truong": "BC Trần Phú",
+        "ten_don_vi": "THPT Lê Xoay",
+        "ma_don_vi": "234"
     }
 }

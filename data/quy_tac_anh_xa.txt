@@ -1,15 +1,15 @@
 # --- [Cột Template] = [Cột Demo / "Giá trị tĩnh"] # Tên gợi nhớ ---
 
 A =   # STT (Code đã tự động đánh số 1, 2, 3...)
-B = J # Số hiệu bằng
+B = K # Số hiệu bằng
 C =   # Số vào sổ gốc cấp văn bằng
-D = "Bằng tốt nghiệp trung học phổ thông" # Tên văn bằng (Tự động điền hàng loạt)
+D = "Bằng tốt nghiệp phổ thông trung học" # Tên văn bằng (Tự động điền hàng loạt)
 E = C # Họ, chữ đệm và tên
 F =   # Mã người học (để trống)
 G =   # Số định danh cá nhân (để trống)
 H =   # Hộ chiếu (để trống)
 I = D # Ngày, tháng, năm sinh (Code tự động ép chuẩn dd/MM/yyyy)
-J = L # Giới tính
+J = # Giới tính
 K = E # Dân tộc
 L = "Việt Nam" # Quốc tịch
 M = F # Nơi sinh
@@ -26,5 +26,5 @@ T = "Sở GD&ĐT Vĩnh Phúc"  # Tên cơ quan cấp bằng
 U =   # Chức danh người ký bằng
 V =   # Họ, chữ đệm, tên người ký bằng
 W =   # Tình trạng văn bằng
-X = M # Ghi chú
+X = L # Ghi chú
 Y = "Đã số hóa đầy đủ, chính xác" # Trạng thái số hóa
