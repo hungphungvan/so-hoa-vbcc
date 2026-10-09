@@ -86,6 +86,14 @@ SYNONYMS_MAP = {
     "X": {
         "name": "Ghi chú",
         "keywords": ["ghi chú", "ghi chu", "note", "diện ưu tiên", "chú thích"]
+    },
+    "AA": {
+        "name": "Mã đơn vị",
+        "keywords": ["mã đơn vị", "ma don vi", "mã trường", "ma truong", "mã đv", "madv", "mã cơ sở"]
+    },
+    "AB": {
+        "name": "Tên đơn vị",
+        "keywords": ["tên đơn vị", "ten don vi", "đơn vị quản lý", "tên đv", "tendv", "đơn vị", "cơ quan"]
     }
 }
 
@@ -155,6 +163,8 @@ def save_mapping_rules(mapping_rules: dict, mapping_file: str):
         "W": "Tình trạng văn bằng",
         "X": "Ghi chú",
         "Y": "Trạng thái số hóa",
+        "AA": "Mã đơn vị",
+        "AB": "Tên đơn vị",
     }
 
     all_cols = sorted(template_col_names.keys(), key=lambda x: column_index_from_string(x))
@@ -236,7 +246,7 @@ def auto_detect_mapping_rules(input_headers: list, existing_rules: dict | None =
 
     return mapping_rules, match_info
 
-def print_mapping_table(mapping_rules: dict, match_info: dict, input_headers: list):
+def print_mapping_table(mapping_rules: dict, match_info: dict, input_headers: list, split_by: str = "N"):
     """In bảng ánh xạ trực quan để người dùng kiểm tra."""
     print("\n" + "="*75)
     print("             BẢNG TỰ ĐỘNG NHẬN DIỆN VÀ ÁNH XẠ CỘT DỮ LIỆU")
@@ -252,7 +262,7 @@ def print_mapping_table(mapping_rules: dict, match_info: dict, input_headers: li
         in_col = mapping_rules[temp_col][1]
         in_title = input_map.get(in_col, "---")
         temp_name = SYNONYMS_MAP.get(temp_col, {}).get("name", f"Cột {temp_col}")
-        star = " ⭐" if temp_col == "N" else ""
+        star = " ⭐" if temp_col == split_by else ""
 
         score_str = ""
         if temp_col in match_info and match_info[temp_col][0] == in_col:
@@ -277,25 +287,27 @@ def review_and_confirm_mapping(
     mapping_rules: dict,
     match_info: dict,
     input_headers: list,
-    mapping_file: str
+    mapping_file: str,
+    split_by: str = "N"
 ) -> dict | None:
     """Hiển thị bảng ánh xạ và cho phép người dùng xác nhận hoặc điều chỉnh nhanh."""
+    anchor_name = SYNONYMS_MAP.get(split_by, {}).get("name", f"Cột {split_by}")
     input_cols_list = [c[0] for c in input_headers]
 
     while True:
-        print_mapping_table(mapping_rules, match_info, input_headers)
+        print_mapping_table(mapping_rules, match_info, input_headers, split_by=split_by)
 
-        has_school = ("N" in mapping_rules and mapping_rules["N"][0] == 'col')
-        if not has_school:
-            print("\n [!] CẢNH BÁO QUAN TRỌNG: Chưa nhận diện được cột 'Tên trường đã học' (Cột N)!")
-            print("     Đây là cột BẮT BUỘC để phân tách dữ liệu theo trường.")
+        has_anchor = (split_by in mapping_rules and mapping_rules[split_by][0] == 'col')
+        if not has_anchor:
+            print(f"\n [!] CẢNH BÁO QUAN TRỌNG: Chưa nhận diện được cột '{anchor_name}' (Cột {split_by})!")
+            print(f"     Đây là cột BẮT BUỘC để phân tách dữ liệu theo {anchor_name}.")
 
         print("\n Bạn muốn làm gì?")
-        if has_school:
+        if has_anchor:
             print(" [Enter] Đồng ý toàn bộ và BẮT ĐẦU TÁCH FILE ngay")
         else:
-            print(" [Enter] Chọn ngay cột 'Tên trường đã học' (Cột N)")
-        print(" [1]     Sửa / gán lại một cột động (vd: đổi cột Họ tên, Số hiệu...)")
+            print(f" [Enter] Chọn ngay cột '{anchor_name}' (Cột {split_by})")
+        print(" [1]     Sửa / gán lại một cột động (vd: đổi cột Họ tên, Số hiệu, Mã đơn vị...)")
         print(" [2]     Chỉnh sửa thông tin tĩnh (Niên khóa, Tên bằng, Địa danh...)")
         print(" [3]     Dùng lại nguyên văn quy tắc cũ từ file 'quy_tac_anh_xa.txt'")
         print(" [0]     Hủy thao tác")
@@ -303,15 +315,15 @@ def review_and_confirm_mapping(
         choice = input("\n -> Lựa chọn của bạn [Mặc định: Enter]: ").strip()
 
         if choice == "":
-            if not has_school:
+            if not has_anchor:
                 print("\n--- DANH SÁCH CÁC CỘT FILE NGUỒN HIỆN CÓ ---")
                 for col_l, col_t in input_headers:
                     print(f"   [{col_l}] {col_t}")
-                col_choice = input("\nNhập chữ cái cột chứa Tên trường (vd: G): ").strip().upper()
+                col_choice = input(f"\nNhập chữ cái cột chứa {anchor_name} (vd: G): ").strip().upper()
                 if col_choice in input_cols_list:
-                    mapping_rules["N"] = ('col', col_choice)
-                    match_info["N"] = (col_choice, dict(input_headers).get(col_choice, ""), 100, "Tên trường đã học")
-                    print(f" -> Đã gán thành công: Cột N <-- [{col_choice}].")
+                    mapping_rules[split_by] = ('col', col_choice)
+                    match_info[split_by] = (col_choice, dict(input_headers).get(col_choice, ""), 100, anchor_name)
+                    print(f" -> Đã gán thành công: Cột {split_by} <-- [{col_choice}].")
                 else:
                     print(" [!] Cột vừa nhập không có trong file nguồn. Vui lòng thử lại.")
                 continue
@@ -327,7 +339,7 @@ def review_and_confirm_mapping(
             print("\n--- DANH SÁCH CÁC CỘT FILE NGUỒN HIỆN CÓ ---")
             for col_l, col_t in input_headers:
                 print(f"   [{col_l}] {col_t}")
-            t_col = input("\nNhập chữ cái cột Template muốn sửa (vd: B, E, N, X... hoặc 'x' để quay lại): ").strip().upper()
+            t_col = input("\nNhập chữ cái cột Template muốn sửa (vd: B, E, N, Q, AA, AB... hoặc 'x' để quay lại): ").strip().upper()
             if t_col in ['X', '']:
                 continue
 
@@ -392,26 +404,27 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
         print(f"[-] LỖI: Không thể mở file template {template_file}. Chi tiết: {e}")
         return
 
-    catalog_file = Path("data/danh_muc_truong.csv")
-    standard_schools = {}
-    if catalog_file.exists():
-        standard_schools = load_school_catalog(str(catalog_file))
+    # 2. CHỌN TIÊU CHÍ TÁCH FILE
+    print("\n" + "="*60)
+    print(" BẮT ĐẦU TÁCH FILE DỮ LIỆU EXCEL")
+    print("="*60)
+    print(" Bạn muốn tách file theo tiêu chí nào?")
+    print("   1. Tách theo Tên trường đã học (Cột N) [Mặc định]")
+    print("   2. Tách theo Hội đồng thi (Cột Q)")
+    split_choice = input(" -> Lựa chọn (1/2) [Mặc định: 1]: ").strip()
 
-    history_file = Path("data/lich_su_chuan_hoa.json")
-    approved_mapping = {}
-    if history_file.exists():
-        try:
-            with open(history_file, 'r', encoding='utf-8') as f:
-                approved_mapping = json.load(f)
-                for v in approved_mapping.values():
-                    if not isinstance(v, dict):
-                        print("[!] Cấu trúc lịch sử cũ không còn tương thích. Hệ thống sẽ học lại từ đầu...")
-                        approved_mapping = {}
-                        break
-        except Exception:  # noqa: BLE001
-            approved_mapping = {}
+    if split_choice == "2":
+        split_by = "Q"
+        split_name = "Hội đồng thi"
+        prefix = "HDT_"
+    else:
+        split_by = "N"
+        split_name = "Tên trường đã học"
+        prefix = ""
 
-    # 2. DÙNG OPENPYXL ĐỂ DÒ TÌM DÒNG BẮT ĐẦU VÀ RÚT TRÍCH TIÊU ĐỀ FILE INPUT
+    print(f"\n[+] Đã chọn tiêu chí: Tách theo '{split_name}' (Cột {split_by})")
+
+    # 3. DÙNG OPENPYXL ĐỂ DÒ TÌM DÒNG BẮT ĐẦU VÀ RÚT TRÍCH TIÊU ĐỀ FILE INPUT
     try:
         wb_in = openpyxl.load_workbook(input_file, data_only=True)
         ws_in = wb_in.active
@@ -440,10 +453,16 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
         print(f"[-] LỖI đọc file input bằng openpyxl: {e}")
         return
 
-    # TỰ ĐỘNG KHỚP CỘT THÔNG MINH VÀ CHO NGƯỜI DÙNG XÁC NHẬN
+    # 4. TỰ ĐỘNG KHỚP CỘT THÔNG MINH VÀ CHO NGƯỜI DÙNG XÁC NHẬN
     existing_rules = load_mapping_rules(mapping_file) if Path(mapping_file).exists() else {}
     auto_rules, match_info = auto_detect_mapping_rules(input_headers, existing_rules)
-    confirmed_rules = review_and_confirm_mapping(auto_rules, match_info, input_headers, mapping_file)
+    confirmed_rules = review_and_confirm_mapping(
+        auto_rules,
+        match_info,
+        input_headers,
+        mapping_file,
+        split_by=split_by
+    )
 
     if not confirmed_rules:
         print("[-] Đã hủy thao tác tách file.")
@@ -451,144 +470,42 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
 
     mapping_rules = confirmed_rules
 
-    # 3. ĐỌC DỮ LIỆU BẰNG PANDAS VÀ CẮT GHÉP CHUẨN XÁC
+    # 5. ĐỌC DỮ LIỆU BẰNG PANDAS VÀ TIẾN HÀNH TÁCH FILE
     try:
         df = pd.read_excel(input_file, sheet_name=0, header=None)
     except Exception as e:  # noqa: BLE001
         print(f"[-] LỖI đọc file input bằng Pandas: {e}")
         return
 
-    SCHOOL_TEMPLATE_COL = "N"
-    if SCHOOL_TEMPLATE_COL not in mapping_rules:
-        print(f"[-] LỖI: Bắt buộc cấu hình ánh xạ cho cột {SCHOOL_TEMPLATE_COL} để tách file.")
+    if split_by not in mapping_rules or mapping_rules[split_by][0] != 'col':
+        print(f"[-] LỖI: Bắt buộc cấu hình ánh xạ cho cột '{split_name}' (Cột {split_by}) để tách file.")
         return
 
-    _map_type, map_val = mapping_rules[SCHOOL_TEMPLATE_COL]
-    school_col_idx = column_index_from_string(map_val) - 1
+    _map_type, split_col_letter = mapping_rules[split_by]
+    split_col_idx = column_index_from_string(split_col_letter) - 1
 
     # Cắt DataFrame từ dòng start_row (index trong Pandas là start_row - 1)
     df_data = df.iloc[start_row - 1:].copy()
-    df_data = df_data.dropna(subset=[school_col_idx])
+    df_data = df_data.dropna(subset=[split_col_idx])
 
-    raw_schools = df_data[school_col_idx].unique()
-
-    # ---------------------------------------------------------
-    # LUỒNG XỬ LÝ: ĐƠN VỊ QUẢN LÝ & TÊN TRƯỜNG ĐÃ HỌC
-    # ---------------------------------------------------------
-    list_standard_names = list(standard_schools.keys())
-
-    for raw_name in raw_schools:
-        raw_name_str = str(raw_name).strip()
-
-        if raw_name_str in standard_schools:
-            if raw_name_str not in approved_mapping:
-                approved_mapping[raw_name_str] = {
-                    "ten_truong": raw_name_str,
-                    "ten_don_vi": raw_name_str,
-                    "ma_don_vi": standard_schools[raw_name_str]
-                }
-            continue
-
-        if raw_name_str in approved_mapping:
-            continue
-
-        print("\n" + "="*60)
-        print(f"[?] PHÁT HIỆN TRƯỜNG CHƯA CHUẨN: '{raw_name_str}'")
-
-        unit_name = ""
-        unit_code = ""
-        if list_standard_names:
-            matches = process.extract(raw_name_str, list_standard_names, limit=3)
-            print(f"\n[BƯỚC 1] Đơn vị nào đang quản lý hồ sơ của '{raw_name_str}'?")
-            print("Gợi ý đơn vị:")
-            for idx, (m_name, score) in enumerate(matches, start=1):
-                print(f"  {idx}. {m_name} (Mã: {standard_schools[m_name]}) - Giống: {score}%")
-            print("  0. Tự tìm kiếm thủ công trong danh mục")
-
-            while True:
-                choice = input(f"Chọn (0-{len(matches)}): ").strip()
-                if choice.isdigit() and 0 <= int(choice) <= len(matches):
-                    choice = int(choice)
-                    break
-                print("[-] Nhập sai, thử lại!")
-
-            if choice == 0:
-                while True:
-                    keyword = input("Nhập từ khóa tìm kiếm Đơn vị (VD: 'Chuyen', 'Tam Duong'): ").strip()
-                    search_results = process.extract(keyword, list_standard_names, limit=5)
-                    for i, (s_name, s_score) in enumerate(search_results, start=1):
-                        print(f"  {i}. {s_name} (Mã: {standard_schools[s_name]})")
-                    print("  0. Tìm từ khóa khác")
-
-                    s_choice = input(f"Chọn đơn vị đúng (1-{len(search_results)}) hoặc 0: ").strip()
-                    if s_choice.isdigit() and 1 <= int(s_choice) <= len(search_results):
-                        unit_name = search_results[int(s_choice) - 1][0]
-                        unit_code = standard_schools[unit_name]
-                        break
-            else:
-                unit_name = matches[choice - 1][0]
-                unit_code = standard_schools[unit_name]
-
-        print("\n[BƯỚC 2] 'Tên trường đã học' ghi trên phôi bằng của học sinh sẽ là gì?")
-        print(f"  1. Giữ nguyên gốc: '{raw_name_str}' (Dành cho trường giải thể/sát nhập)")
-        print(f"  2. Lấy tên Đơn vị: '{unit_name}' (Dành cho lỗi sai chính tả)")
-        print("  3. Tự gõ tên trường chuẩn xác...")
-
-        final_school_name = ""
-        while True:
-            t_choice = input("Lựa chọn (1-3): ").strip()
-            if t_choice == '1':
-                final_school_name = raw_name_str
-                break
-            elif t_choice == '2':
-                final_school_name = unit_name
-                break
-            elif t_choice == '3':
-                final_school_name = input("Nhập tên trường chuẩn xác: ").strip()
-                if final_school_name:
-                    break
-            print("[-] Vui lòng chọn 1, 2 hoặc 3.")
-
-        approved_mapping[raw_name_str] = {
-            "ten_truong": final_school_name,
-            "ten_don_vi": unit_name,
-            "ma_don_vi": unit_code
-        }
-        with open(history_file, 'w', encoding='utf-8') as f:
-            json.dump(approved_mapping, f, ensure_ascii=False, indent=4)
-
-        print(f"  -> ĐÃ LƯU: Tên trên bằng [{final_school_name}] | Đơn vị quản lý [{unit_name}]")
-
+    raw_groups = df_data[split_col_idx].unique()
+    print(f"\n[+] Đã tìm thấy {len(raw_groups)} nhóm {split_name} cần tách.")
     print("\n[+] Bắt đầu tách và kết xuất Excel...\n")
 
-    # ---------------------------------------------------------
-    # TIẾN HÀNH TÁCH FILE
-    # ---------------------------------------------------------
-    for raw_school in raw_schools:
-        raw_name_str = str(raw_school).strip()
-        school_info = approved_mapping[raw_name_str]
+    for raw_group in raw_groups:
+        raw_group_str = str(raw_group).strip()
+        if not raw_group_str:
+            continue
 
-        final_school_name = school_info["ten_truong"]
-        unit_name = school_info["ten_don_vi"]
-        unit_code = school_info["ma_don_vi"]
-
-        df_school = df_data[df_data[school_col_idx] == raw_school]
+        df_group = df_data[df_data[split_col_idx] == raw_group]
 
         wb = openpyxl.load_workbook(template_file)
         ws = wb['Data']
 
-        ma_dv_col, ten_dv_col = None, None
-        for cell in ws[2]:
-            header_val = str(cell.value).strip() if cell.value else ""
-            if header_val == "Mã đơn vị":
-                ma_dv_col = cell.column
-            elif header_val == "Tên đơn vị":
-                ten_dv_col = cell.column
-
-        current_out_row = 3  # Đổi tên để tránh nhầm với start_row lúc quét
+        current_out_row = 3
         stt_counter = 1
 
-        for _, row in df_school.iterrows():
+        for _, row in df_group.iterrows():
             ws.cell(row=current_out_row, column=1, value=stt_counter)
 
             for temp_letter, (m_type, m_val) in mapping_rules.items():
@@ -600,11 +517,7 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                 elif m_type == 'col':
                     demo_idx = column_index_from_string(m_val) - 1
                     if demo_idx < len(row):
-                        if demo_idx == school_col_idx:
-                            val = final_school_name
-                        else:
-                            val = row.iloc[demo_idx]
-
+                        val = row.iloc[demo_idx]
                         if pd.isna(val):
                             val = ""
                         else:
@@ -622,18 +535,13 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
 
                         ws.cell(row=current_out_row, column=col_idx, value=val)
 
-            if ma_dv_col:
-                ws.cell(row=current_out_row, column=ma_dv_col, value=unit_code)
-            if ten_dv_col:
-                ws.cell(row=current_out_row, column=ten_dv_col, value=unit_name)
-
             current_out_row += 1
             stt_counter += 1
 
-        safe_school_name = re.sub(r'[<>:"/\\|?*]', '_', final_school_name).strip()
-        num_students = len(df_school)
+        safe_group_name = re.sub(r'[<>:"/\\|?*]', '_', raw_group_str).strip()
+        num_students = len(df_group)
 
-        file_name = f"{safe_school_name}_{num_students}.xlsx"
+        file_name = f"{prefix}{safe_group_name}_{num_students}.xlsx"
 
         output_path = Path(output_dir) / file_name
         wb.save(output_path)
