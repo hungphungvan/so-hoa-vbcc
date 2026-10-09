@@ -65,7 +65,7 @@ def run_ocr_feature(folder_path_str: str):
     # CẤU TRÚC TÌM KIẾM PROMPT
     local_prompt = data_dir / "prompt.txt"
     year_prompt = data_dir.parent / "prompt.txt"
-    default_prompt = Path(__file__).parent.parent / "data" / "default_prompt.txt"
+    default_prompt = Path("data/default_prompt.txt") if Path("data/default_prompt.txt").is_file() else Path(__file__).parent.parent / "data" / "default_prompt.txt"
 
     if local_prompt.is_file():
         print(f"[+] Đang dùng prompt ưu tiên của TRƯỜNG tại: {local_prompt}")
