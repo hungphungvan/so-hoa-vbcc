@@ -145,7 +145,7 @@ def save_mapping_rules(mapping_rules: dict, mapping_file: str):
         "F": "Mã người học (để trống)",
         "G": "Số định danh cá nhân (để trống)",
         "H": "Hộ chiếu (để trống)",
-        "I": "Ngày, tháng, năm sinh (Code tự động ép chuẩn dd/MM/yyyy)",
+        "I": "Ngày, tháng, năm sinh (Giữ nguyên dạng văn bản)",
         "J": "Giới tính",
         "K": "Dân tộc",
         "L": "Quốc tịch",
@@ -155,7 +155,7 @@ def save_mapping_rules(mapping_rules: dict, mapping_file: str):
         "P": "Điểm các môn thi",
         "Q": "Hội đồng thi",
         "R": "Địa danh nơi cơ quan cấp bằng đặt trụ sở",
-        "S": "Ngày tháng năm cấp bằng (Code tự ép chuẩn dd/MM/yyyy)",
+        "S": "Ngày tháng năm cấp bằng (Giữ nguyên dạng văn bản)",
         "T": "Tên cơ quan cấp bằng",
         "U": "Chức danh người ký bằng",
         "V": "Họ, chữ đệm, tên người ký bằng",
@@ -501,7 +501,9 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                     continue
                 col_idx = column_index_from_string(temp_letter)
                 if m_type == 'const':
-                    ws.cell(row=current_out_row, column=col_idx, value=m_val)
+                    cell = ws.cell(row=current_out_row, column=col_idx, value=m_val)
+                    if temp_letter in ["I", "S"]:
+                        cell.number_format = "@"
                 elif m_type == 'col':
                     demo_idx = column_index_from_string(m_val) - 1
                     if demo_idx < len(row):
@@ -509,19 +511,16 @@ def run_excel_splitter(input_file: str, template_file: str, mapping_file: str, o
                         if pd.isna(val):
                             val = ""
                         else:
-                            if temp_letter in ["I", "S"]:
-                                try:
-                                    val = pd.to_datetime(val, dayfirst=True).strftime("%d/%m/%Y")
-                                except Exception:  # noqa: BLE001
-                                    val = str(val).strip()
-                            elif isinstance(val, pd.Timestamp):
+                            if hasattr(val, "strftime"):
                                 val = val.strftime("%d/%m/%Y")
                             elif isinstance(val, float) and val.is_integer():
                                 val = str(int(val))
                             else:
                                 val = str(val).strip()
 
-                        ws.cell(row=current_out_row, column=col_idx, value=val)
+                        cell = ws.cell(row=current_out_row, column=col_idx, value=val)
+                        if temp_letter in ["I", "S"]:
+                            cell.number_format = "@"
 
             current_out_row += 1
             stt_counter += 1
