@@ -1,35 +1,28 @@
 @echo off
-chcp 65001 > nul
 echo ======================================================
-echo    BẮT ĐẦU ĐÓNG GÓI ỨNG DỤNG SỐ HÓA VBCC THÀNH FILE EXE
+echo    BAT DAU DONG GOI UNG DUNG SO-HOA-VBCC THANH EXE
 echo ======================================================
 echo.
 
-echo [Bước 1/3] Kiểm tra và cài đặt PyInstaller...
-uv add --dev pyinstaller
+echo [Buoc 1/3] Cai dat PyInstaller qua uv...
+call uv add --dev pyinstaller
 if %errorlevel% neq 0 (
-    echo [!] Lỗi khi cài đặt PyInstaller qua uv.
+    echo [!] Loi khi cai dat PyInstaller qua uv.
     pause
     exit /b %errorlevel%
 )
 echo.
 
-echo [Bước 2/3] Đang đóng gói ứng dụng (PyInstaller --onedir)...
-uv run pyinstaller --noconfirm --onedir --console ^
-    --name "so-hoa-vbcc" ^
-    --collect-all pillow_heif ^
-    --hidden-import openpyxl ^
-    --hidden-import thefuzz ^
-    main.py
-
+echo [Buoc 2/3] Dang dong goi bang PyInstaller...
+call uv run pyinstaller --noconfirm --onedir --console --name "so-hoa-vbcc" --collect-all pillow_heif --hidden-import openpyxl --hidden-import thefuzz main.py
 if %errorlevel% neq 0 (
-    echo [!] Quá trình đóng gói gặp lỗi.
+    echo [!] Qua trinh dong goi gap loi.
     pause
     exit /b %errorlevel%
 )
 echo.
 
-echo [Bước 3/3] Đồng bộ thư mục data và file .env...
+echo [Buoc 3/3] Dong bo thu muc data va file .env...
 if not exist "dist\so-hoa-vbcc\data" (
     xcopy /E /I /Y "data" "dist\so-hoa-vbcc\data" > nul
 ) else (
@@ -41,12 +34,9 @@ if exist ".env" (
 )
 
 echo ======================================================
-echo    ĐÓNG GÓI THÀNH CÔNG!
+echo    DONG GOI THANH CONG!
 echo ======================================================
-echo  Thư mục ứng dụng: dist\so-hoa-vbcc\
-echo  File thực thi:    dist\so-hoa-vbcc\so-hoa-vbcc.exe
-echo.
-echo  Ghi chú: Khi mang sang máy khác, bạn chỉ cần nén 
-echo  toàn bộ thư mục 'dist\so-hoa-vbcc' thành file .zip.
+echo  Thu muc ung dung: dist\so-hoa-vbcc\
+echo  File thuc thi:    dist\so-hoa-vbcc\so-hoa-vbcc.exe
 echo ======================================================
 pause

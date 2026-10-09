@@ -19,3 +19,8 @@ dependencies = [
 
 [project.scripts]
 so-hoa-vbcc = "so_hoa_vbcc:main"
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.22.3",
+]

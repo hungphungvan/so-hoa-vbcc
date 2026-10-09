@@ -1,4 +1,15 @@
+import sys
 from pathlib import Path
+
+# Cấu hình UTF-8 cho console Windows tránh lỗi hiển thị tiếng Việt UnicodeEncodeError
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace") # type: ignore
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace") # type: ignore
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8") # type: ignore
+
 
 from features.danhsach_generator import generate_danhsach
 from features.data_cleaner import run_data_cleaner
